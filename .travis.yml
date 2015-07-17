@@ -12,6 +12,7 @@ install: |
   go get ./...
 script: |
   go test ./...
+  echo REALLY
 before_deploy: |
   # Bump new version
   wget -O semver https://gist.githubusercontent.com/loa/435da12af9494a112daf/raw/semver.sh
