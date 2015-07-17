@@ -1,0 +1,53 @@
+language: go
+branches:
+  only:
+  - master
+go:
+  - '1.3'
+env:
+  global:
+  - GH_REF: github.com/tomologic/wrench.git
+  - secure: r5P2vjw00VexUPCAVLZav3O+egQ0QRCeVz4+vyaq2NefTVQIUaU+4xXANkPHpLyhwnhN8mhmw1VgSeT/Xj3uHn3v4L06VYVrYHz+U1dLkbQS+OH5G9iyodntn6QsHox1a7QmsLOh3TG9YLHGupvti4JKZ7nMlh/BHIJNRGKXgivAinvAOivxgfW3+GhcWCJic6+A3Cg1gFmiXoAvxUzhBI3cs7HHfDHdqFMpoxulB2xZ6WCxQ8RDV4EYw1b/kHhbtpxUSLlhf+cPxnX7XLUFyhDSkwdwoAGlPDOTyqdGWIe9EQx7rSQvCSNjfifu7H0BH/Nph76FxD/9HQtqyyP4SGHz3QAGmiAGqNCWDXXegz0QWp2lTmXipgWIn+sztk+MpEdTaQD3qFzgLEuPLup5amjOHkzUVRg9C+nHJqz8DJLeC9xZCFDynjfoJvigs50fMDNHbLpwiwON65iTUU4ltHsG0LdgAB8GyYI2GC1BSfVJAfGNG6K4EraoTMiemI60Ie/PQpV+uTbtjun+dsYUyGTc8+bMsX0YNFg2oG6S6Tz17J+XEisHS+MIN2a4RiZF3aehsL+J1i55eufYUjMa4huD1sSIIt/O7LzCw6btEoGc7Sk7ppbh/Rbtb2XLmd52asRegablIXykL3yiNvof+PNcD7JMlH1fZ7zPocFxK64=
+install: |
+  go get ./...
+script: |
+  go test ./...
+before_deploy: |
+  # Bump new version
+  wget -O semver https://gist.githubusercontent.com/loa/435da12af9494a112daf/raw/semver.sh
+  chmod u+x semver
+  git config user.name "Travis CI"
+  git config user.email "notifications@travis-ci.org"
+  git tag -a v$(./semver bump minor) -m "Version v$(./semver bump minor)"
+  git push --quiet "https://${GH_TOKEN}@${GH_REF}" --tags > /dev/null 2>&1
+
+  # Build wrench binaries
+  mkdir -p BUILD
+
+  os_list="linux darwin windows freebsd"
+  arch_list="386 amd64"
+
+  for os in $os_list; do
+    for arch in $arch_list; do
+      export GIMME_OS="$os"
+      export GIMME_ARCH="$arch"
+
+      eval "$(gimme 1.4.2)"
+  
+      exename="wrench-$(git describe)-${os}-${arch}"
+      [ "$os" != "windows" ] || exename="${exename}.exe"
+      go build -a -ldflags '-w' -o "BUILD/$exename" ./... || {
+        echo "FAILED FOR $os $arch" >&2
+        continue
+      }
+    done
+  done
+deploy:
+  provider: releases
+  api_key:
+    secure: QA/8DQ3ClZgQEu4sAAai3BwdB3xecyXzs+vriKNPaSB7hn75UkEndLy4vP7891qxEYm5sfiqshObnCt3VGD1Z9F/ZNRFsPJatk4dw9zH0jMebiDZCBKHZ1jEgQZDN14CdkMhcGtTAEr85QwpTtk6Verfvxy9XYTUdPe59T9vfM9tERLvDYyDXA5ps4l0rCJYBtJ5H/oy7lVKgMj32kEqVrOQKBD+93NjhsM7KXMaH8HRXpCh1Zvd1N9H/k7k6Q+XFbDmw9rd5WFt3+46J41El+/NH95S144GT+WUopz7pdwu5DWH2d9Jsf8sfRjJFMXV37TenEmtAp9R8TGXiqLkzHcRDr9HQAH4gi+51srxpbfoPpyJSXuflWopPO48Jia3+Boh6g9K/3qyRkqAliYKPqazECrs2nhmNTh4/CCEWXbX50h7Z8hgEXrGrYtah1HHyvrSgjEBL9NsLNdFMtMkWdkas4xZL8oEO5to3doSgckKkNFR+jiwNBPZ+eLOGohURwNdl8xfrxV9jssqBehch4xAoEqgVbGwS5z7XoCI8Vcte8HpkyfRNEKdTn1KF1ZzfwSc6PbY3hHg+9Tj6N+kE4ETHMOhhAIk2lsYP26eaax6XpfPbfUpwTfQAE/J+mdnJVxPzhZ6N9O+4Xhdm6zWch6qR41kY4+Vf5+grX1GoPM=
+  file: BUILD/wrench-*
+  file_glob: true
+  skip_cleanup: true
+  on:
+    repo: tomologic/wrench
