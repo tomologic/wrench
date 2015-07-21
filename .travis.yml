@@ -13,34 +13,28 @@ install: |
 script: |
   go test ./...
 before_deploy: |
-  # Bump new version
-  wget -O semver https://gist.githubusercontent.com/loa/435da12af9494a112daf/raw/semver.sh
-  chmod u+x semver
-  git config user.name "Travis CI"
-  git config user.email "notifications@travis-ci.org"
-  git tag -a v$(./semver bump minor) -m "Version v$(./semver bump minor)"
-  git push --quiet "https://${GH_TOKEN}@${GH_REF}" --tags > /dev/null 2>&1
+  git tag --contains HEAD | grep -q "v.*" && {
+    echo "HEAD is already tagged release."
+  } || {
+    # Bump new version
+    wget -O semver https://gist.githubusercontent.com/loa/435da12af9494a112daf/raw/semver.sh
+    chmod u+x semver
+    git config user.name "Travis CI"
+    git config user.email "notifications@travis-ci.org"
+    git tag -a v$(./semver bump minor) -m "Version v$(./semver bump minor)"
+    git push --quiet "https://${GH_TOKEN}@${GH_REF}" --tags > /dev/null 2>&1
+  }
 
-  # Build wrench binaries
-  mkdir -p BUILD
-
-  os_list="linux darwin windows freebsd"
-  arch_list="386 amd64"
-
+  # Build
+  export GIMME_ARCH="amd64"
+  os_list="linux darwin"
   for os in $os_list; do
-    for arch in $arch_list; do
-      export GIMME_OS="$os"
-      export GIMME_ARCH="$arch"
+    export GIMME_OS="$os"
 
-      eval "$(gimme 1.4.2)"
+    eval "$(gimme 1.4.2)"
   
-      exename="wrench-$(git describe)-${os}-${arch}"
-      [ "$os" != "windows" ] || exename="${exename}.exe"
-      go build -a -ldflags '-w' -o "BUILD/$exename" ./... || {
-        echo "FAILED FOR $os $arch" >&2
-        continue
-      }
-    done
+    filename="wrench-$(git describe)-${os}-${arch}"
+    go build -a -ldflags '-w' -o $filename main.go
   done
 deploy:
   provider: releases

@@ -1,4 +1,4 @@
-package main
+package build
 
 import (
 	"fmt"
@@ -6,9 +6,11 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
+	"github.com/tomologic/wrench/config"
+	"github.com/tomologic/wrench/utils"
 )
 
-func main_build(rootCmd *cobra.Command) {
+func AddToWrench(rootCmd *cobra.Command) {
 	var cmdBuild = &cobra.Command{
 		Use:   "build",
 		Short: "Build docker image",
@@ -22,10 +24,10 @@ func main_build(rootCmd *cobra.Command) {
 }
 
 func build() {
-	if fileExists("./Dockerfile.builder") {
+	if utils.FileExists("./Dockerfile.builder") {
 		fmt.Printf("INFO: %s\n", "Builder build mode")
 		buildBuilder()
-	} else if fileExists("./Dockerfile") {
+	} else if utils.FileExists("./Dockerfile") {
 		fmt.Printf("INFO: %s\n", "Simple build mode")
 		buildSimple()
 	} else {
@@ -36,14 +38,14 @@ func build() {
 
 func buildBuilder() {
 	image_name := fmt.Sprintf("%s/%s:%s",
-		config.Project.Organization,
-		config.Project.Name,
-		config.Project.Version)
+		config.GetProjectOrganization,
+		config.GetProjectName,
+		config.GetProjectVersion)
 
 	builder_image_name := fmt.Sprintf("%s/builder-%s:%s",
-		config.Project.Organization,
-		config.Project.Name,
-		config.Project.Version)
+		config.GetProjectOrganization,
+		config.GetProjectName,
+		config.GetProjectVersion)
 
 	fmt.Printf("INFO: %s %s\n\n",
 		"Found Dockerfile.builder, building image builder",
@@ -92,9 +94,9 @@ func buildBuilder() {
 
 func buildSimple() {
 	image_name := fmt.Sprintf("%s/%s:%s",
-		config.Project.Organization,
-		config.Project.Name,
-		config.Project.Version)
+		config.GetProjectOrganization,
+		config.GetProjectName,
+		config.GetProjectVersion)
 
 	fmt.Printf("INFO: %s %s\n",
 		"Found Dockerfile, building image",
