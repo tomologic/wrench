@@ -38,14 +38,14 @@ func build() {
 
 func buildBuilder() {
 	image_name := fmt.Sprintf("%s/%s:%s",
-		config.GetProjectOrganization,
-		config.GetProjectName,
-		config.GetProjectVersion)
+		config.GetProjectOrganization(),
+		config.GetProjectName(),
+		config.GetProjectVersion())
 
 	builder_image_name := fmt.Sprintf("%s/builder-%s:%s",
-		config.GetProjectOrganization,
-		config.GetProjectName,
-		config.GetProjectVersion)
+		config.GetProjectOrganization(),
+		config.GetProjectName(),
+		config.GetProjectVersion())
 
 	fmt.Printf("INFO: %s %s\n\n",
 		"Found Dockerfile.builder, building image builder",
@@ -94,9 +94,9 @@ func buildBuilder() {
 
 func buildSimple() {
 	image_name := fmt.Sprintf("%s/%s:%s",
-		config.GetProjectOrganization,
-		config.GetProjectName,
-		config.GetProjectVersion)
+		config.GetProjectOrganization(),
+		config.GetProjectName(),
+		config.GetProjectVersion())
 
 	fmt.Printf("INFO: %s %s\n",
 		"Found Dockerfile, building image",
