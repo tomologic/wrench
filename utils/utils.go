@@ -1,10 +1,10 @@
-package main
+package utils
 
 import (
 	"os"
 )
 
-func fileExists(filename string) bool {
+func FileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return (err == nil)
 }

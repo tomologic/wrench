@@ -2,13 +2,15 @@ package main
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/tomologic/wrench/build"
+	"github.com/tomologic/wrench/config"
 )
 
 func main() {
 	var rootCmd = &cobra.Command{Use: "wrench"}
 
-	main_config(rootCmd)
-	main_build(rootCmd)
+	config.AddToWrench(rootCmd)
+	build.AddToWrench(rootCmd)
 
 	rootCmd.Execute()
 }
