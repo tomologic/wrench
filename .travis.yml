@@ -13,9 +13,12 @@ install: |
 script: |
   go test ./...
 before_deploy: |
+  set +e
   git tag --contains HEAD | grep -q "v.*" && {
+    set -e
     echo "HEAD is already tagged release."
   } || {
+    set -e
     # Bump new version
     wget -O semver https://gist.githubusercontent.com/loa/435da12af9494a112daf/raw/semver.sh
     chmod u+x semver
@@ -26,21 +29,27 @@ before_deploy: |
   }
 
   # Build
-  export GIMME_ARCH="amd64"
   os_list="linux darwin"
+  arch="amd64"
+  export GIMME_ARCH="$arch"
   for os in $os_list; do
     export GIMME_OS="$os"
 
     eval "$(gimme 1.4.2)"
   
     filename="wrench-$(git describe)-${os}-${arch}"
-    go build -a -ldflags '-w' -o $filename main.go
+    go build -a -ldflags '-w' -o $filename && {
+      echo "$filename built."
+    } || {
+      echo "ERROR: $filename not built."
+    }
   done
+  ls -l
 deploy:
   provider: releases
   api_key:
     secure: QA/8DQ3ClZgQEu4sAAai3BwdB3xecyXzs+vriKNPaSB7hn75UkEndLy4vP7891qxEYm5sfiqshObnCt3VGD1Z9F/ZNRFsPJatk4dw9zH0jMebiDZCBKHZ1jEgQZDN14CdkMhcGtTAEr85QwpTtk6Verfvxy9XYTUdPe59T9vfM9tERLvDYyDXA5ps4l0rCJYBtJ5H/oy7lVKgMj32kEqVrOQKBD+93NjhsM7KXMaH8HRXpCh1Zvd1N9H/k7k6Q+XFbDmw9rd5WFt3+46J41El+/NH95S144GT+WUopz7pdwu5DWH2d9Jsf8sfRjJFMXV37TenEmtAp9R8TGXiqLkzHcRDr9HQAH4gi+51srxpbfoPpyJSXuflWopPO48Jia3+Boh6g9K/3qyRkqAliYKPqazECrs2nhmNTh4/CCEWXbX50h7Z8hgEXrGrYtah1HHyvrSgjEBL9NsLNdFMtMkWdkas4xZL8oEO5to3doSgckKkNFR+jiwNBPZ+eLOGohURwNdl8xfrxV9jssqBehch4xAoEqgVbGwS5z7XoCI8Vcte8HpkyfRNEKdTn1KF1ZzfwSc6PbY3hHg+9Tj6N+kE4ETHMOhhAIk2lsYP26eaax6XpfPbfUpwTfQAE/J+mdnJVxPzhZ6N9O+4Xhdm6zWch6qR41kY4+Vf5+grX1GoPM=
-  file: BUILD/wrench-*
+  file: wrench-*
   file_glob: true
   skip_cleanup: true
   on:
