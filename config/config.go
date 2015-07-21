@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/tomologic/wrench/utils"
@@ -120,24 +119,20 @@ func detectProjectName() *string {
 
 func detectProjectVersion() *string {
 	// make sure git is installed and we are inside a git repo
-	var waitStatus syscall.WaitStatus
 
 	cmd := exec.Command("sh", "-c", "git rev-parse --short HEAD")
 	out, err := cmd.Output()
 	if err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			waitStatus = exitError.Sys().(syscall.WaitStatus)
-
-			if waitStatus.ExitStatus() == 127 {
-				fmt.Printf("ERROR: %s\n", "No git executable found")
-				os.Exit(127)
-			} else if waitStatus.ExitStatus() == 128 {
-				fmt.Printf("ERROR: %s\n", "Not a git repository")
-				os.Exit(128)
-			} else {
-				fmt.Println(out)
-				os.Exit(waitStatus.ExitStatus())
-			}
+		exitcode := utils.GetCommandExitCode(err)
+		if exitcode == 127 {
+			fmt.Printf("ERROR: %s\n", "No git executable found")
+			os.Exit(exitcode)
+		} else if exitcode == 128 {
+			fmt.Printf("ERROR: %s\n", "Not a git repository")
+			os.Exit(exitcode)
+		} else {
+			fmt.Println(out)
+			os.Exit(exitcode)
 		}
 	}
 
@@ -145,16 +140,13 @@ func detectProjectVersion() *string {
 	cmd = exec.Command("sh", "-c", "git describe --tags --match v*.*.*")
 	out, err = cmd.Output()
 	if err != nil {
-		if exitError, ok := err.(*exec.ExitError); ok {
-			waitStatus = exitError.Sys().(syscall.WaitStatus)
-
-			if waitStatus.ExitStatus() == 128 {
-				// No version tag found, generate initial version
-				return generateInitialVersion()
-			} else {
-				fmt.Println(out)
-				os.Exit(waitStatus.ExitStatus())
-			}
+		exitcode := utils.GetCommandExitCode(err)
+		if exitcode == 128 {
+			// No version tag found, generate initial version
+			return generateInitialVersion()
+		} else {
+			fmt.Println(out)
+			os.Exit(exitcode)
 		}
 	}
 
