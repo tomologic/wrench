@@ -38,7 +38,7 @@ before_deploy: |
     eval "$(gimme 1.4.2)"
   
     filename="wrench-$(git describe)-${os}-${arch}"
-    go build -a -ldflags '-w' -o $filename && {
+    go build -a -ldflags "-w -X github.com/tomologic/wrench/version.version '$(git describe)'" -o $filename && {
       echo "$filename built."
     } || {
       echo "ERROR: $filename not built."
