@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/tomologic/wrench/utils"
@@ -118,10 +119,67 @@ func detectProjectName() *string {
 }
 
 func detectProjectVersion() *string {
-	out, err := exec.Command("sh", "-c", "git describe").Output()
+	// make sure git is installed and we are inside a git repo
+	var waitStatus syscall.WaitStatus
+
+	cmd := exec.Command("sh", "-c", "git rev-parse --short HEAD")
+	out, err := cmd.Output()
 	if err != nil {
-		panic(err)
+		if exitError, ok := err.(*exec.ExitError); ok {
+			waitStatus = exitError.Sys().(syscall.WaitStatus)
+
+			if waitStatus.ExitStatus() == 127 {
+				fmt.Printf("ERROR: %s\n", "No git executable found")
+				os.Exit(127)
+			} else if waitStatus.ExitStatus() == 128 {
+				fmt.Printf("ERROR: %s\n", "Not a git repository")
+				os.Exit(128)
+			} else {
+				fmt.Println(out)
+				os.Exit(waitStatus.ExitStatus())
+			}
+		}
 	}
+
+	// get git describe but only on semver tags
+	cmd = exec.Command("sh", "-c", "git describe --tags --match v*.*.*")
+	out, err = cmd.Output()
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			waitStatus = exitError.Sys().(syscall.WaitStatus)
+
+			if waitStatus.ExitStatus() == 128 {
+				// No version tag found, generate initial version
+				return generateInitialVersion()
+			} else {
+				fmt.Println(out)
+				os.Exit(waitStatus.ExitStatus())
+			}
+		}
+	}
+
 	version := strings.TrimSpace(string(out))
+	return &version
+}
+
+func generateInitialVersion() *string {
+	// Get number of commits
+	out, err := exec.Command("sh", "-c", "git rev-list HEAD --count").Output()
+	if err != nil {
+		fmt.Println(out)
+		os.Exit(1)
+	}
+	num_commits := strings.TrimSpace(string(out))
+
+	// Get short git sha
+	out, err = exec.Command("sh", "-c", "git rev-parse --short HEAD").Output()
+	if err != nil {
+		fmt.Println(out)
+		os.Exit(1)
+	}
+	git_short := strings.TrimSpace(string(out))
+
+	// Create a git describe like snapshot version
+	var version = fmt.Sprintf("v0.0.0-%s-g%s", num_commits, git_short)
 	return &version
 }
