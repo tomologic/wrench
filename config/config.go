@@ -2,12 +2,14 @@ package config
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/tomologic/wrench/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -23,6 +25,8 @@ type Config struct {
 var config = &Config{}
 
 func AddToWrench(cmdRoot *cobra.Command) {
+	readWrenchFile()
+
 	var cmdConfig = &cobra.Command{
 		Use:   "config",
 		Short: "Configuration for wrench",
@@ -38,6 +42,24 @@ func AddToWrench(cmdRoot *cobra.Command) {
 	}
 
 	cmdRoot.AddCommand(cmdConfig)
+}
+
+func readWrenchFile() {
+	if !utils.FileExists("./wrench.yml") {
+		return
+	}
+
+	file, err := ioutil.ReadFile("./wrench.yml")
+	if err != nil {
+		fmt.Printf("File error: %v\n", err)
+		os.Exit(1)
+	}
+
+	err = yaml.Unmarshal(file, &config)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
 
 func generateAllConfig() {
