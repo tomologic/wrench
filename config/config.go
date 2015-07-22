@@ -14,12 +14,13 @@ import (
 )
 
 type Project struct {
-	Organization *string
-	Name         *string
-	Version      *string
+	Organization *string `yaml:"organization,omitempty"`
+	Name         *string `yaml:"name,omitempty"`
+	Version      *string `yaml:"version,omitempty"`
 }
 type Config struct {
-	Project Project
+	Project Project `yaml:"project,omitempty"`
+	Run     map[string]string
 }
 
 var config = &Config{}
@@ -87,6 +88,10 @@ func GetProjectVersion() string {
 		config.Project.Version = detectProjectVersion()
 	}
 	return *config.Project.Version
+}
+
+func GetRunList() *map[string]string {
+	return &config.Run
 }
 
 func detectProjectOrganization() *string {

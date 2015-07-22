@@ -1,0 +1,9 @@
+project:
+  organization: example
+  name: run-builder
+  version: v1.0.0
+run:
+  go-test: |
+    #!/bin/bash -xe
+
+    go test
