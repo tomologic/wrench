@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tomologic/wrench/config"
@@ -25,11 +26,11 @@ func AddToWrench(rootCmd *cobra.Command) {
 
 func build() {
 	if utils.FileExists("./Dockerfile.builder") {
-		fmt.Printf("INFO: %s\n", "Builder build mode")
 		buildBuilder()
+		buildTest()
 	} else if utils.FileExists("./Dockerfile") {
-		fmt.Printf("INFO: %s\n", "Simple build mode")
 		buildSimple()
+		buildTest()
 	} else {
 		fmt.Printf("ERROR: %s\n", "No Dockerfile found.")
 		os.Exit(1)
@@ -42,7 +43,7 @@ func buildBuilder() {
 		config.GetProjectName(),
 		config.GetProjectVersion())
 
-	builder_image_name := fmt.Sprintf("%s/builder-%s:%s",
+	builder_image_name := fmt.Sprintf("%s/%s:%s-builder",
 		config.GetProjectOrganization(),
 		config.GetProjectName(),
 		config.GetProjectVersion())
@@ -98,11 +99,53 @@ func buildSimple() {
 		config.GetProjectName(),
 		config.GetProjectVersion())
 
-	fmt.Printf("INFO: %s %s\n",
+	fmt.Printf("INFO: %s %s\n\n",
 		"Found Dockerfile, building image",
 		image_name)
 
 	cmd_string := fmt.Sprintf("docker build -t '%s' .", image_name)
+	cmd := exec.Command("sh", "-c", cmd_string)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func buildTest() {
+	image_name := fmt.Sprintf("%s/%s:%s",
+		config.GetProjectOrganization(),
+		config.GetProjectName(),
+		config.GetProjectVersion())
+
+	test_image_name := fmt.Sprintf("%s/%s:%s-test",
+		config.GetProjectOrganization(),
+		config.GetProjectName(),
+		config.GetProjectVersion())
+
+	if !utils.FileExists("./Dockerfile.test") {
+		return
+	}
+
+	fmt.Printf("\nINFO: %s %s\n\n",
+		"Found Dockerfile.test, building test image",
+		test_image_name)
+
+	dockerfile := utils.GetFileContent("./Dockerfile.test")
+
+	if !strings.HasPrefix(dockerfile[0], "FROM") {
+		fmt.Println("ERROR: Missing FROM on first line in Dockerfile.test")
+		os.Exit(1)
+	}
+
+	dockerfile[0] = fmt.Sprintf("FROM %s", image_name)
+
+	utils.WriteFileContent("./Dockerfile.test", dockerfile)
+
+	cmd_string := fmt.Sprintf("docker build -f Dockerfile.test -t '%s' .", test_image_name)
 	cmd := exec.Command("sh", "-c", cmd_string)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
