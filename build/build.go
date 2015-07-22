@@ -6,10 +6,15 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 	"github.com/tomologic/wrench/config"
 	"github.com/tomologic/wrench/utils"
 )
+
+var flag_rebuild bool
+var image_name string
+var docker_client *docker.Client
 
 func AddToWrench(rootCmd *cobra.Command) {
 	var cmdBuild = &cobra.Command{
@@ -21,10 +26,27 @@ func AddToWrench(rootCmd *cobra.Command) {
 		},
 	}
 
+	cmdBuild.Flags().BoolVarP(&flag_rebuild, "rebuild", "r", false, "Force rebuild of image")
 	rootCmd.AddCommand(cmdBuild)
 }
 
 func build() {
+	image_name = fmt.Sprintf("%s/%s:%s",
+		config.GetProjectOrganization(),
+		config.GetProjectName(),
+		config.GetProjectVersion())
+
+	if !flag_rebuild && dockerImageExists(image_name) {
+		fmt.Printf("INFO: Docker image %s already exists\n", image_name)
+
+		// Build test image if missing
+		if !dockerImageExists(fmt.Sprintf("%s-test", image_name)) {
+			buildTest()
+		}
+
+		os.Exit(0)
+	}
+
 	if utils.FileExists("./Dockerfile.builder") {
 		buildBuilder()
 		buildTest()
@@ -38,15 +60,7 @@ func build() {
 }
 
 func buildBuilder() {
-	image_name := fmt.Sprintf("%s/%s:%s",
-		config.GetProjectOrganization(),
-		config.GetProjectName(),
-		config.GetProjectVersion())
-
-	builder_image_name := fmt.Sprintf("%s/%s:%s-builder",
-		config.GetProjectOrganization(),
-		config.GetProjectName(),
-		config.GetProjectVersion())
+	builder_image_name := fmt.Sprintf("%s-builder", image_name)
 
 	fmt.Printf("INFO: %s %s\n\n",
 		"Found Dockerfile.builder, building image builder",
@@ -94,11 +108,6 @@ func buildBuilder() {
 }
 
 func buildSimple() {
-	image_name := fmt.Sprintf("%s/%s:%s",
-		config.GetProjectOrganization(),
-		config.GetProjectName(),
-		config.GetProjectVersion())
-
 	fmt.Printf("INFO: %s %s\n\n",
 		"Found Dockerfile, building image",
 		image_name)
@@ -116,21 +125,13 @@ func buildSimple() {
 }
 
 func buildTest() {
-	image_name := fmt.Sprintf("%s/%s:%s",
-		config.GetProjectOrganization(),
-		config.GetProjectName(),
-		config.GetProjectVersion())
-
-	test_image_name := fmt.Sprintf("%s/%s:%s-test",
-		config.GetProjectOrganization(),
-		config.GetProjectName(),
-		config.GetProjectVersion())
+	test_image_name := fmt.Sprintf("%s-test", image_name)
 
 	if !utils.FileExists("./Dockerfile.test") {
 		return
 	}
 
-	fmt.Printf("\nINFO: %s %s\n\n",
+	fmt.Printf("INFO: %s %s\n\n",
 		"Found Dockerfile.test, building test image",
 		test_image_name)
 
@@ -155,4 +156,17 @@ func buildTest() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func dockerImageExists(name string) bool {
+	if docker_client == nil {
+		docker_client, _ = docker.NewClientFromEnv()
+	}
+	if _, err := docker_client.InspectImage(name); err == docker.ErrNoSuchImage {
+		return false
+	} else if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return true
 }
