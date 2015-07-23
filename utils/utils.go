@@ -6,7 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
+
+	"github.com/fsouza/go-dockerclient"
 )
+
+var docker_client *docker.Client
 
 func FileExists(filename string) bool {
 	_, err := os.Stat(filename)
@@ -59,4 +63,31 @@ func WriteFileContent(filename string, lines []string) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func DockerImageExists(name string) bool {
+	if docker_client == nil {
+		docker_client, _ = docker.NewClientFromEnv()
+	}
+	if _, err := docker_client.InspectImage(name); err == docker.ErrNoSuchImage {
+		return false
+	} else if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return true
+}
+
+func DockerRemoveImage(name string) bool {
+	if docker_client == nil {
+		docker_client, _ = docker.NewClientFromEnv()
+	}
+	err := docker_client.RemoveImage(name)
+	if err == docker.ErrNoSuchImage {
+		return false
+	} else if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return true
 }

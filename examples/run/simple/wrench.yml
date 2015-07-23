@@ -1,0 +1,9 @@
+project:
+  organization: example
+  name: run-simple
+  version: v1.0.0
+run:
+  syntax-test: |
+    #!/bin/bash -xe
+
+    echo "run syntax check"

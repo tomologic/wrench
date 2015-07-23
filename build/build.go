@@ -6,7 +6,6 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 	"github.com/tomologic/wrench/config"
 	"github.com/tomologic/wrench/utils"
@@ -14,7 +13,6 @@ import (
 
 var flag_rebuild bool
 var image_name string
-var docker_client *docker.Client
 
 func AddToWrench(rootCmd *cobra.Command) {
 	var cmdBuild = &cobra.Command{
@@ -36,11 +34,11 @@ func build() {
 		config.GetProjectName(),
 		config.GetProjectVersion())
 
-	if !flag_rebuild && dockerImageExists(image_name) {
+	if !flag_rebuild && utils.DockerImageExists(image_name) {
 		fmt.Printf("INFO: Docker image %s already exists\n", image_name)
 
 		// Build test image if missing
-		if !dockerImageExists(fmt.Sprintf("%s-test", image_name)) {
+		if !utils.DockerImageExists(fmt.Sprintf("%s-test", image_name)) {
 			buildTest()
 		}
 
@@ -93,18 +91,6 @@ func buildBuilder() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	// Cleanup builder image
-	cmd_string = fmt.Sprintf("docker rmi '%s'", builder_image_name)
-	cmd = exec.Command("sh", "-c", cmd_string)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Run()
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 }
 
 func buildSimple() {
@@ -142,7 +128,12 @@ func buildTest() {
 		os.Exit(1)
 	}
 
-	dockerfile[0] = fmt.Sprintf("FROM %s", image_name)
+	// if FROM string subfix with builder then base on builder image
+	if strings.HasSuffix(dockerfile[0], "builder") {
+		dockerfile[0] = fmt.Sprintf("FROM %s-builder", image_name)
+	} else {
+		dockerfile[0] = fmt.Sprintf("FROM %s", image_name)
+	}
 
 	utils.WriteFileContent("./Dockerfile.test", dockerfile)
 
@@ -156,17 +147,4 @@ func buildTest() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-}
-
-func dockerImageExists(name string) bool {
-	if docker_client == nil {
-		docker_client, _ = docker.NewClientFromEnv()
-	}
-	if _, err := docker_client.InspectImage(name); err == docker.ErrNoSuchImage {
-		return false
-	} else if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	return true
 }
