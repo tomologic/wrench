@@ -1,3 +1,0 @@
-FROM example/run-test:v1.0.0
-
-RUN pip install -r requirements-test.txt

@@ -1,5 +1,2 @@
 FROM
-
 RUN pip install -r requirements-test.txt
-
-ENTRYPOINT ["flake8", "-v", "."]
