@@ -28,15 +28,21 @@ To view the settings that wrench will use for a project simply run the config su
 ```
 $ cd examples/simple
 $ wrench config
-project:
-  organization: example
-  name: run-simple
-  version: v1.0.0
-run:
+Project:
+  Organization: example
+  Name: run-simple
+  Version: v1.0.0
+Run:
   syntax-test: |
     #!/bin/bash -xe
 
     echo "run syntax check"
+```
+
+To get specific values use the format flag. Format will be executed as a [golang template](http://golang.org/pkg/text/template/).
+
+```
+wrench config --format '{{.Project.Version}}'
 ```
 
 Wrench will try to detect project settings automatically.
@@ -49,10 +55,10 @@ It's possible to override all config settings with a _wrench.yml_ file.
 
 ```
 $ cat wrench.yml
-project:
-  organization: example
-  name: real-app-name
-  version: v1.0.0
+Project:
+  Organization: example
+  Name: real-app-name
+  Version: v1.0.0
 ```
 
 ## Build
@@ -122,11 +128,11 @@ Wrench will run the command in the test image if the project has one, otherwise 
 ```
 $ cd examples/test/
 $ cat wrench.yml
-project:
-  organization: example
-  name: run-test
-  version: v1.0.0
-run:
+Project:
+  Organization: example
+  Name: run-test
+  Version: v1.0.0
+Run:
   syntax-test: flake8 -v .
 $ wrench run syntax-test
 INFO: running syntax-test in image example/run-test:v1.0.0-test
