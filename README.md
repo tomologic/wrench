@@ -72,8 +72,8 @@ The _wrench.yml_ is treated by wrench as a [golang template](http://golang.org/p
 ```
 $ cat wrench.yml
 Project:
-  Organization: {{if .Environ.DOCKER_REGISTRY}}{{.Environ.DOCKER_REGISTRY}}{{else}}localhost{{end}}/example
-  Name: real-app-name
+  Organization: {{ or (.Environ.DOCKER_REGISTRY) "localhost" }}/example
+  Name: {{ or (.Environ.IMAGE_NAME_PREFIX) "" }}real-app-name
   Version: v1.0.0
 ```
 

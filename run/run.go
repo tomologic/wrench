@@ -31,10 +31,7 @@ func AddToWrench(cmdRoot *cobra.Command) {
 }
 
 func run(name string) {
-	image_name := fmt.Sprintf("%s/%s:%s",
-		config.GetProjectOrganization(),
-		config.GetProjectName(),
-		config.GetProjectVersion())
+	image_name := config.GetProjectImage()
 
 	if utils.FileExists("./Dockerfile.test") {
 		// If test dockerfile exists then use test image

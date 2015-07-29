@@ -19,6 +19,7 @@ type Project struct {
 	Organization string `yaml:"Organization"`
 	Name         string `yaml:"Name"`
 	Version      string `yaml:"Version"`
+	Image        string `yaml:"Image"`
 }
 type Config struct {
 	Project Project           `yaml:"Project"`
@@ -122,6 +123,7 @@ func generateAllConfig() {
 	GetProjectOrganization()
 	GetProjectName()
 	GetProjectVersion()
+	GetProjectImage()
 }
 
 func GetProjectOrganization() string {
@@ -143,6 +145,16 @@ func GetProjectVersion() string {
 		config.Project.Version = detectProjectVersion()
 	}
 	return config.Project.Version
+}
+
+func GetProjectImage() string {
+	if config.Project.Image == "" {
+		config.Project.Image = fmt.Sprintf("%s/%s:%s",
+			GetProjectOrganization(),
+			GetProjectName(),
+			GetProjectVersion())
+	}
+	return config.Project.Image
 }
 
 func GetRunList() *map[string]string {

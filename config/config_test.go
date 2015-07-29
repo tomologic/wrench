@@ -18,6 +18,7 @@ func TestGetConfig(t *testing.T) {
 	assert.Equal(t, GetProjectOrganization(), "example")
 	assert.Equal(t, GetProjectName(), "foobar")
 	assert.Equal(t, GetProjectVersion(), "v1.0.0")
+	assert.Equal(t, GetProjectImage(), "example/foobar:v1.0.0")
 }
 
 func ExampleConfigCommand() {
@@ -35,6 +36,7 @@ func ExampleConfigCommand() {
 	//   Organization: example
 	//   Name: foobar
 	//   Version: v1.0.0
+	//   Image: example/foobar:v1.0.0
 }
 
 func ExampleConfigCommandWithRun() {
@@ -55,6 +57,7 @@ func ExampleConfigCommandWithRun() {
 	//   Organization: example
 	//   Name: foobar
 	//   Version: v1.0.0
+	//   Image: example/foobar:v1.0.0
 	// Run:
 	//   syntax-test: flake8 -v .
 }
@@ -70,7 +73,7 @@ func ExampleConfigCommandFormatProject() {
 
 	flag_format = "{{.Project}}"
 	commandConfig()
-	// Output: {example foobar v1.0.0}
+	// Output: {example foobar v1.0.0 example/foobar:v1.0.0}
 }
 
 func ExampleConfigCommandFormatProjectName() {
@@ -99,4 +102,18 @@ func ExampleConfigCommandFormatProjectVersion() {
 	flag_format = "{{.Project.Version}}"
 	commandConfig()
 	// Output: v1.0.0
+}
+
+func ExampleConfigCommandFormatProjectImage() {
+	config = &Config{
+		Project: Project{
+			Organization: "example",
+			Name:         "foobar",
+			Version:      "v1.0.0",
+		},
+	}
+
+	flag_format = "{{.Project.Image}}"
+	commandConfig()
+	// Output: example/foobar:v1.0.0
 }

@@ -29,10 +29,7 @@ func AddToWrench(rootCmd *cobra.Command) {
 }
 
 func build() {
-	image_name = fmt.Sprintf("%s/%s:%s",
-		config.GetProjectOrganization(),
-		config.GetProjectName(),
-		config.GetProjectVersion())
+	image_name = config.GetProjectImage()
 
 	if !flag_rebuild && utils.DockerImageExists(image_name) {
 		fmt.Printf("INFO: Docker image %s already exists\n", image_name)
