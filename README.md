@@ -23,14 +23,16 @@ brew install wrench
 
 ## Project config
 
-To view the settings that wrench will use for a project simply run the config subcommand.
+### Print wrench config
+
+To view the config that wrench will use for a project simply run the config subcommand.
 
 ```
 $ cd examples/simple
 $ wrench config
 Project:
   Organization: example
-  Name: run-simple
+  Name: simple
   Version: v1.0.0
 Run:
   syntax-test: |
@@ -42,21 +44,35 @@ Run:
 To get specific values use the format flag. Format will be executed as a [golang template](http://golang.org/pkg/text/template/).
 
 ```
-wrench config --format '{{.Project.Version}}'
+$ cd examples/simple
+$ wrench config --format '{{.Project.Name}}'
+simple
 ```
 
-Wrench will try to detect project settings automatically.
+### Wrench.yml file
+
+Wrench will try to detect project config automatically.
 
 - Organization is derived from current hostname.
 - Name is derived from current directory.
 - Version is derived from latest semver git tag.
 
-It's possible to override all config settings with a _wrench.yml_ file.
+It's possible to override all config with a _wrench.yml_ file.
 
 ```
 $ cat wrench.yml
 Project:
   Organization: example
+  Name: real-app-name
+  Version: v1.0.0
+```
+
+The _wrench.yml_ is treated by wrench as a [golang template](http://golang.org/pkg/text/template/) file where the environment is accessible through _.Environ_.
+
+```
+$ cat wrench.yml
+Project:
+  Organization: {{if .Environ.DOCKER_REGISTRY}}{{.Environ.DOCKER_REGISTRY}}{{else}}localhost{{end}}/example
   Name: real-app-name
   Version: v1.0.0
 ```
@@ -75,12 +91,12 @@ $ wrench build --rebuild
 
 ### Simple
 
-Simple mode will build an image named and tagged based on project settings _(either automatically detected or provided through wrench.yml)_.
+Simple mode will build an image named and tagged based on project config _(either automatically detected or provided through wrench.yml)_.
 
 ```
 $ cd examples/simple
 $ wrench build
-INFO: Found Dockerfile, building image example/run-simple:v1.0.0
+INFO: Found Dockerfile, building image example/simple:v1.0.0
 ...
 Successfully built 5eb975a7956b
 ```
@@ -130,12 +146,12 @@ $ cd examples/test/
 $ cat wrench.yml
 Project:
   Organization: example
-  Name: run-test
+  Name: test
   Version: v1.0.0
 Run:
   syntax-test: flake8 -v .
 $ wrench run syntax-test
-INFO: running syntax-test in image example/run-test:v1.0.0-test
+INFO: running syntax-test in image example/test:v1.0.0-test
 directory .
 checking ./server.py
 ```

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -35,26 +36,7 @@ func AddToWrench(cmdRoot *cobra.Command) {
 		Short: "Configuration for wrench",
 		Long:  `configuration picked up by wrench and used in commands`,
 		Run: func(cmd *cobra.Command, args []string) {
-			generateAllConfig()
-
-			if flag_format == "" {
-				d, err := yaml.Marshal(&config)
-				if err != nil {
-					panic(err)
-				}
-				fmt.Printf(string(d))
-			} else {
-				tmpl, err := template.New("format").Parse(flag_format)
-				if err != nil {
-					fmt.Printf("ERROR: %s\n", err)
-					os.Exit(1)
-				}
-				err = tmpl.Execute(os.Stdout, &config)
-				if err != nil {
-					fmt.Printf("ERROR: %s\n", err)
-					os.Exit(1)
-				}
-			}
+			commandConfig()
 		},
 	}
 
@@ -63,18 +45,73 @@ func AddToWrench(cmdRoot *cobra.Command) {
 	cmdRoot.AddCommand(cmdConfig)
 }
 
+func commandConfig() {
+	generateAllConfig()
+
+	if flag_format == "" {
+		d, err := yaml.Marshal(&config)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf(string(d))
+	} else {
+		tmpl, err := template.New("format").Parse(flag_format)
+		if err != nil {
+			fmt.Printf("ERROR: %s\n", err)
+			os.Exit(1)
+		}
+		err = tmpl.Execute(os.Stdout, &config)
+		if err != nil {
+			fmt.Printf("ERROR: %s\n", err)
+			os.Exit(1)
+		}
+	}
+}
+
 func readWrenchFile() {
 	if !utils.FileExists("./wrench.yml") {
 		return
 	}
 
+	// Get wrench file content
 	file, err := ioutil.ReadFile("./wrench.yml")
 	if err != nil {
 		fmt.Printf("File error: %v\n", err)
 		os.Exit(1)
 	}
 
-	err = yaml.Unmarshal(file, &config)
+	// Create structure accessible from wrench file
+	Environ := make(map[string]string)
+	type TemplateContext struct {
+		Environ *map[string]string
+	}
+	tmpl_context := TemplateContext{
+		Environ: &Environ,
+	}
+
+	// Get all environment variables
+	for _, item := range os.Environ() {
+		splits := strings.Split(item, "=")
+		Environ[splits[0]] = strings.Join(splits[1:], "=")
+	}
+
+	// Create template from wrench file
+	var rendered_config bytes.Buffer
+	tmpl, err := template.New("config").Parse(string(file))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Render template with tmpl_context
+	err = tmpl.Execute(&rendered_config, tmpl_context)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// Load the expected yaml file structure from rendered config
+	err = yaml.Unmarshal(rendered_config.Bytes(), &config)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -142,7 +179,6 @@ func detectProjectName() string {
 
 func detectProjectVersion() string {
 	// make sure git is installed and we are inside a git repo
-
 	cmd := exec.Command("sh", "-c", "git rev-parse --short HEAD")
 	out, err := cmd.Output()
 	if err != nil {
