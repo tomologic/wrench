@@ -1,8 +1,8 @@
-project:
-  organization: example
-  name: run-simple
-  version: v1.0.0
-run:
+Project:
+  Organization: example
+  Name: simple
+  Version: v1.0.0
+Run:
   syntax-test: |
     #!/bin/bash -xe
 

@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/spf13/cobra"
 	"github.com/tomologic/wrench/utils"
@@ -14,16 +15,17 @@ import (
 )
 
 type Project struct {
-	Organization *string `yaml:"organization,omitempty"`
-	Name         *string `yaml:"name,omitempty"`
-	Version      *string `yaml:"version,omitempty"`
+	Organization string `yaml:"Organization"`
+	Name         string `yaml:"Name"`
+	Version      string `yaml:"Version"`
 }
 type Config struct {
-	Project Project `yaml:"project,omitempty"`
-	Run     map[string]string
+	Project Project           `yaml:"Project"`
+	Run     map[string]string `yaml:"Run,omitempty"`
 }
 
 var config = &Config{}
+var flag_format string
 
 func AddToWrench(cmdRoot *cobra.Command) {
 	readWrenchFile()
@@ -34,13 +36,29 @@ func AddToWrench(cmdRoot *cobra.Command) {
 		Long:  `configuration picked up by wrench and used in commands`,
 		Run: func(cmd *cobra.Command, args []string) {
 			generateAllConfig()
-			d, err := yaml.Marshal(&config)
-			if err != nil {
-				panic(err)
+
+			if flag_format == "" {
+				d, err := yaml.Marshal(&config)
+				if err != nil {
+					panic(err)
+				}
+				fmt.Printf(string(d))
+			} else {
+				tmpl, err := template.New("format").Parse(flag_format)
+				if err != nil {
+					fmt.Printf("ERROR: %s\n", err)
+					os.Exit(1)
+				}
+				err = tmpl.Execute(os.Stdout, &config)
+				if err != nil {
+					fmt.Printf("ERROR: %s\n", err)
+					os.Exit(1)
+				}
 			}
-			fmt.Printf(string(d))
 		},
 	}
+
+	cmdConfig.Flags().StringVar(&flag_format, "format", "", "Return specifik value from config")
 
 	cmdRoot.AddCommand(cmdConfig)
 }
@@ -70,31 +88,31 @@ func generateAllConfig() {
 }
 
 func GetProjectOrganization() string {
-	if config.Project.Organization == nil {
+	if config.Project.Organization == "" {
 		config.Project.Organization = detectProjectOrganization()
 	}
-	return *config.Project.Organization
+	return config.Project.Organization
 }
 
 func GetProjectName() string {
-	if config.Project.Name == nil {
+	if config.Project.Name == "" {
 		config.Project.Name = detectProjectName()
 	}
-	return *config.Project.Name
+	return config.Project.Name
 }
 
 func GetProjectVersion() string {
-	if config.Project.Version == nil {
+	if config.Project.Version == "" {
 		config.Project.Version = detectProjectVersion()
 	}
-	return *config.Project.Version
+	return config.Project.Version
 }
 
 func GetRunList() *map[string]string {
 	return &config.Run
 }
 
-func detectProjectOrganization() *string {
+func detectProjectOrganization() string {
 	out, err := exec.Command("sh", "-c", "hostname -f").Output()
 	if err != nil {
 		panic(err)
@@ -110,19 +128,19 @@ func detectProjectOrganization() *string {
 		org = parts[len(parts)-2]
 	}
 	org = strings.TrimSpace(org)
-	return &org
+	return org
 }
 
-func detectProjectName() *string {
+func detectProjectName() string {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		panic(err)
 	}
 	project := string(filepath.Base(dir))
-	return &project
+	return project
 }
 
-func detectProjectVersion() *string {
+func detectProjectVersion() string {
 	// make sure git is installed and we are inside a git repo
 
 	cmd := exec.Command("sh", "-c", "git rev-parse --short HEAD")
@@ -156,10 +174,10 @@ func detectProjectVersion() *string {
 	}
 
 	version := strings.TrimSpace(string(out))
-	return &version
+	return version
 }
 
-func generateInitialVersion() *string {
+func generateInitialVersion() string {
 	// Get number of commits
 	out, err := exec.Command("sh", "-c", "git rev-list HEAD --count").Output()
 	if err != nil {
@@ -178,5 +196,5 @@ func generateInitialVersion() *string {
 
 	// Create a git describe like snapshot version
 	var version = fmt.Sprintf("v0.0.0-%s-g%s", num_commits, git_short)
-	return &version
+	return version
 }
