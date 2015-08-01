@@ -46,8 +46,8 @@ func ExampleConfigCommandWithRun() {
 			Name:         "foobar",
 			Version:      "v1.0.0",
 		},
-		Run: map[string]string{
-			"syntax-test": "flake8 -v .",
+		Run: map[string]Run{
+			"syntax-test": {Cmd: "flake8 -v ."},
 		},
 	}
 
@@ -59,7 +59,8 @@ func ExampleConfigCommandWithRun() {
 	//   Version: v1.0.0
 	//   Image: example/foobar:v1.0.0
 	// Run:
-	//   syntax-test: flake8 -v .
+	//   syntax-test:
+	//     Cmd: flake8 -v .
 }
 
 func ExampleConfigCommandFormatProject() {
