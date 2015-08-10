@@ -155,3 +155,24 @@ INFO: running syntax-test in image example/test:v1.0.0-test
 directory .
 checking ./server.py
 ```
+
+### Environment variables
+
+Environmental variables can be provided for run commands through the _wrench.yml_ file.
+
+```
+Project:
+  Organization: example
+  Name: simple
+Run:
+  onerow: echo "onerow"
+  passthrough:
+    Cmd: echo $FOO
+    Env:
+      - FOO={{ or (.Environ.FOO) "default-value" }}
+  expanded:
+    Cmd: echo "expanded"
+    Env:
+      - FOO=BAR
+      - HELLO=WORLD
+```

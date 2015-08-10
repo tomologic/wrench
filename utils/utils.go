@@ -26,7 +26,7 @@ func GetCommandExitCode(err error) int {
 	return 0
 }
 
-func GetFileContent(path string) []string {
+func GetFileContent(path string) string {
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)
@@ -34,20 +34,20 @@ func GetFileContent(path string) []string {
 	}
 	defer file.Close()
 
-	var lines []string
+	var content string
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		content += scanner.Text()
 	}
 
 	if err = scanner.Err(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	return lines
+	return content
 }
 
-func WriteFileContent(filename string, lines []string) {
+func WriteFileContent(filename string, content string) {
 	file, err := os.Create(filename)
 	if err != nil {
 		fmt.Println(err)
@@ -56,9 +56,8 @@ func WriteFileContent(filename string, lines []string) {
 	}
 
 	w := bufio.NewWriter(file)
-	for _, line := range lines {
-		fmt.Fprintln(w, line)
-	}
+	fmt.Fprintf(w, content)
+
 	if err = w.Flush(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

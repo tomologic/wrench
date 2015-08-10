@@ -21,9 +21,13 @@ type Project struct {
 	Version      string `yaml:"Version"`
 	Image        string `yaml:"Image"`
 }
+type Run struct {
+	Cmd string   `yaml:"Cmd"`
+	Env []string `yaml:"Env,omitempty"`
+}
 type Config struct {
-	Project Project           `yaml:"Project"`
-	Run     map[string]string `yaml:"Run,omitempty"`
+	Project Project        `yaml:"Project"`
+	Run     map[string]Run `yaml:"Run,omitempty"`
 }
 
 var config = &Config{}
@@ -41,7 +45,7 @@ func AddToWrench(cmdRoot *cobra.Command) {
 		},
 	}
 
-	cmdConfig.Flags().StringVar(&flag_format, "format", "", "Return specifik value from config")
+	cmdConfig.Flags().StringVar(&flag_format, "format", "", "Return specific value from config")
 
 	cmdRoot.AddCommand(cmdConfig)
 }
@@ -111,11 +115,67 @@ func readWrenchFile() {
 		os.Exit(1)
 	}
 
+	type UnmarshalConfig struct {
+		Project Project       `yaml:"Project"`
+		Run     yaml.MapSlice `yaml:"Run,omitempty"`
+	}
+	uconfig := UnmarshalConfig{}
+
 	// Load the expected yaml file structure from rendered config
-	err = yaml.Unmarshal(rendered_config.Bytes(), &config)
+	err = yaml.Unmarshal(rendered_config.Bytes(), &uconfig)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+
+	// Get Project from unmarshalled config
+	config.Project = uconfig.Project
+	config.Run = make(map[string]Run)
+
+	// Handle errors parsing dynamic structure of Run
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("ERROR: Unexpected yaml structure for Run\n")
+			os.Exit(1)
+		}
+	}()
+
+	// Handle dynamic structure of Run map
+	for _, item := range uconfig.Run {
+		name, ok := item.Key.(string)
+		if ok != true {
+			fmt.Println("ERROR: Unexpected yaml structure for Run")
+			os.Exit(1)
+		}
+
+		run := Run{}
+
+		// No more values provided if value is a string
+		run.Cmd, ok = item.Value.(string)
+		if ok {
+			config.Run[name] = run
+			continue
+		}
+
+		r := item.Value.(yaml.MapSlice)
+		for k := range r {
+			if r[k].Key.(string) == "Cmd" {
+				run.Cmd = r[k].Value.(string)
+			} else if r[k].Key.(string) == "Env" {
+				for _, a := range r[k].Value.([]interface{}) {
+					run.Env = append(run.Env, a.(string))
+				}
+			} else {
+				panic(fmt.Sprintf("Unknown key %s\n", r[k].Key.(string)))
+			}
+		}
+
+		if run.Cmd == "" {
+			fmt.Printf("ERROR: Unexpected yaml structure for Run.%s\n", name)
+			os.Exit(1)
+		}
+
+		config.Run[name] = run
 	}
 }
 
@@ -157,8 +217,9 @@ func GetProjectImage() string {
 	return config.Project.Image
 }
 
-func GetRunList() *map[string]string {
-	return &config.Run
+func GetRun(name string) (Run, bool) {
+	val, ok := config.Run[name]
+	return val, ok
 }
 
 func detectProjectOrganization() string {
