@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"syscall"
@@ -27,20 +27,11 @@ func GetCommandExitCode(err error) int {
 }
 
 func GetFileContent(path string) string {
-	file, err := os.Open(path)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	defer file.Close()
-
 	var content string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		content += scanner.Text()
-	}
+	content_bytes, err := ioutil.ReadFile(path)
+	content = string(content_bytes)
 
-	if err = scanner.Err(); err != nil {
+	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -48,17 +39,10 @@ func GetFileContent(path string) string {
 }
 
 func WriteFileContent(filename string, content string) {
-	file, err := os.Create(filename)
+	content_bytes := []byte(content)
+	err := ioutil.WriteFile(filename, content_bytes, 0644)
+
 	if err != nil {
-		fmt.Println(err)
-		file.Close()
-		os.Exit(1)
-	}
-
-	w := bufio.NewWriter(file)
-	fmt.Fprintf(w, content)
-
-	if err = w.Flush(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
