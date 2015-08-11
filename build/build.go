@@ -120,17 +120,21 @@ func buildTest() {
 
 	dockerfile := utils.GetFileContent("./Dockerfile.test")
 
-	if !strings.HasPrefix(dockerfile, "FROM") {
+	dockerfile_lines := strings.Split(dockerfile, "\n")
+
+	if !strings.HasPrefix(dockerfile_lines[0], "FROM") {
 		fmt.Println("ERROR: Missing FROM on first line in Dockerfile.test")
 		os.Exit(1)
 	}
 
 	// if FROM string subfix with builder then base on builder image
-	if strings.HasSuffix(dockerfile, "builder") {
-		dockerfile = fmt.Sprintf("FROM %s-builder", image_name)
+	if strings.HasSuffix(dockerfile_lines[0], "builder") {
+		dockerfile_lines[0] = fmt.Sprintf("FROM %s-builder", image_name)
 	} else {
-		dockerfile = fmt.Sprintf("FROM %s", image_name)
+		dockerfile_lines[0] = fmt.Sprintf("FROM %s", image_name)
 	}
+
+	dockerfile = strings.Join(dockerfile_lines, "\n")
 
 	utils.WriteFileContent("./Dockerfile.test", dockerfile)
 
