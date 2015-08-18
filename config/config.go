@@ -2,11 +2,13 @@ package config
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -31,17 +33,18 @@ type Config struct {
 }
 
 var config = &Config{}
-var flag_format string
 
 func AddToWrench(cmdRoot *cobra.Command) {
 	readWrenchFile()
+
+	var flag_format string
 
 	var cmdConfig = &cobra.Command{
 		Use:   "config",
 		Short: "Configuration for wrench",
 		Long:  `configuration picked up by wrench and used in commands`,
 		Run: func(cmd *cobra.Command, args []string) {
-			commandConfig()
+			fmt.Println(commandConfig(flag_format))
 		},
 	}
 
@@ -50,26 +53,28 @@ func AddToWrench(cmdRoot *cobra.Command) {
 	cmdRoot.AddCommand(cmdConfig)
 }
 
-func commandConfig() {
+func commandConfig(format string) string {
 	generateAllConfig()
 
-	if flag_format == "" {
+	if format == "" {
 		d, err := yaml.Marshal(&config)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf(string(d))
+		return string(d)
 	} else {
-		tmpl, err := template.New("format").Parse(flag_format)
+		tmpl, err := template.New("format").Parse(format)
 		if err != nil {
 			fmt.Printf("ERROR: %s\n", err)
 			os.Exit(1)
 		}
-		err = tmpl.Execute(os.Stdout, &config)
+		var out bytes.Buffer
+		err = tmpl.Execute(&out, &config)
 		if err != nil {
 			fmt.Printf("ERROR: %s\n", err)
 			os.Exit(1)
 		}
+		return out.String()
 	}
 }
 
@@ -222,12 +227,17 @@ func GetRun(name string) (Run, bool) {
 	return val, ok
 }
 
-func detectProjectOrganization() string {
-	out, err := exec.Command("sh", "-c", "hostname -f").Output()
+var getFqdn = func() string {
+	fqdn, err := exec.Command("sh", "-c", "hostname -f").Output()
 	if err != nil {
 		panic(err)
 	}
-	parts := strings.Split(string(out), ".")
+	return string(fqdn)
+}
+
+func detectProjectOrganization() string {
+	fqdn := getFqdn()
+	parts := strings.Split(string(fqdn), ".")
 
 	var org string
 	if len(parts) <= 2 {
@@ -241,69 +251,118 @@ func detectProjectOrganization() string {
 	return org
 }
 
-func detectProjectName() string {
+var getAbsFilePath = func() string {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		panic(err)
 	}
-	project := string(filepath.Base(dir))
-	return project
+	return dir
+}
+
+func detectProjectName() string {
+	dir := getAbsFilePath()
+	if project := string(filepath.Base(dir)); project == "/" {
+		return "noname"
+	} else {
+		return project
+	}
+}
+
+var runCmd = func(command string) (int, string) {
+	exitcode := 0
+	cmd := exec.Command(fmt.Sprintf("sh -c %s", command))
+	out, err := cmd.Output()
+	if err != nil {
+		exitcode = utils.GetCommandExitCode(err)
+	}
+	return exitcode, string(out)
+}
+
+var gitRepoPresent = func() error {
+	exitcode, out := runCmd("git rev-parse --short HEAD")
+	if exitcode == 127 {
+		return errors.New("No git executable found")
+	} else if exitcode == 128 {
+		return errors.New("Not a git repository")
+	} else if exitcode != 0 {
+		return errors.New(out)
+	}
+	return nil
+}
+
+var getGitSemverTag = func() (string, error) {
+	// get git describe but only on semver tags
+	exitcode, out := runCmd("git describe --tags --match v*.*.*")
+	if exitcode == 128 {
+		// No version tag found, generate initial version
+		return "", errors.New("No semver formatted git tag found")
+	} else if exitcode != 0 {
+		return "", errors.New(out)
+	} else if out == "" {
+		return "", errors.New("Empty output from git describe")
+	}
+
+	version := strings.TrimSpace(string(out))
+	return version, nil
 }
 
 func detectProjectVersion() string {
 	// make sure git is installed and we are inside a git repo
-	cmd := exec.Command("sh", "-c", "git rev-parse --short HEAD")
-	out, err := cmd.Output()
-	if err != nil {
-		exitcode := utils.GetCommandExitCode(err)
-		if exitcode == 127 {
-			fmt.Printf("ERROR: %s\n", "No git executable found")
-			os.Exit(exitcode)
-		} else if exitcode == 128 {
-			fmt.Printf("ERROR: %s\n", "Not a git repository")
-			os.Exit(exitcode)
-		} else {
-			fmt.Println(out)
-			os.Exit(exitcode)
-		}
+	if err := gitRepoPresent(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	// get git describe but only on semver tags
-	cmd = exec.Command("sh", "-c", "git describe --tags --match v*.*.*")
-	out, err = cmd.Output()
-	if err != nil {
-		exitcode := utils.GetCommandExitCode(err)
-		if exitcode == 128 {
-			// No version tag found, generate initial version
-			return generateInitialVersion()
-		} else {
-			fmt.Println(out)
-			os.Exit(exitcode)
-		}
+	// get latest git semver version
+	if version, err := getGitSemverTag(); err != nil {
+		return generateInitialVersion()
+	} else {
+		return version
 	}
-
-	version := strings.TrimSpace(string(out))
-	return version
 }
 
-func generateInitialVersion() string {
-	// Get number of commits
-	out, err := exec.Command("sh", "-c", "git rev-list HEAD --count").Output()
+var getGitCommitCount = func() (int, error) {
+	exitcode, out := runCmd("git rev-list HEAD --count")
+	if exitcode != 0 {
+		return 0, errors.New(out)
+	}
+
+	num, err := strconv.Atoi(out)
 	if err != nil {
-		fmt.Println(out)
+		return 0, err
+	}
+
+	return num, nil
+}
+
+var getGitShortSha = func() (string, error) {
+	exitcode, out := runCmd("git rev-parse --short HEAD")
+	if exitcode == 128 {
+		return "", errors.New("No semver formatted git tag found")
+	} else if exitcode != 0 {
+		return "", errors.New(out)
+	} else if out == "" {
+		return "", errors.New("Empty output from git rev-parse")
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+var generateInitialVersion = func() string {
+	// Get number of commits
+	num_commits, err := getGitCommitCount()
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
-	num_commits := strings.TrimSpace(string(out))
 
 	// Get short git sha
-	out, err = exec.Command("sh", "-c", "git rev-parse --short HEAD").Output()
+	git_short, err := getGitShortSha()
 	if err != nil {
-		fmt.Println(out)
+		fmt.Println(err)
 		os.Exit(1)
 	}
-	git_short := strings.TrimSpace(string(out))
 
 	// Create a git describe like snapshot version
-	var version = fmt.Sprintf("v0.0.0-%s-g%s", num_commits, git_short)
+	var version = fmt.Sprintf("v0.0.0-%d-g%s", num_commits, git_short)
 	return version
 }
