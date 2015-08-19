@@ -11,7 +11,7 @@ env:
 install: |
   go get -t ./...
 script: |
-  go test ./...
+  go test ./... -v
 before_deploy: |
   set +e
   git tag --contains HEAD | grep -q "v.*" && {
