@@ -31,12 +31,13 @@ type Config struct {
 	Project Project        `yaml:"Project"`
 	Run     map[string]Run `yaml:"Run,omitempty"`
 }
+type TemplateContext struct {
+	Environ *map[string]string
+}
 
 var config = &Config{}
 
 func AddToWrench(cmdRoot *cobra.Command) {
-	readWrenchFile()
-
 	var flag_format string
 
 	var cmdConfig = &cobra.Command{
@@ -51,10 +52,20 @@ func AddToWrench(cmdRoot *cobra.Command) {
 	cmdConfig.Flags().StringVar(&flag_format, "format", "", "Return specific value from config")
 
 	cmdRoot.AddCommand(cmdConfig)
+	c, err := loadConfigFile()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	config = &c
 }
 
 func commandConfig(format string) string {
-	generateAllConfig()
+	// Detect values for fields not set
+	GetProjectOrganization()
+	GetProjectName()
+	GetProjectVersion()
+	GetProjectImage()
 
 	if format == "" {
 		d, err := yaml.Marshal(&config)
@@ -78,117 +89,174 @@ func commandConfig(format string) string {
 	}
 }
 
-func readWrenchFile() {
-	if !utils.FileExists("./wrench.yml") {
-		return
-	}
+var getEnviron = func() []string {
+	return os.Environ()
+}
 
-	// Get wrench file content
-	file, err := ioutil.ReadFile("./wrench.yml")
-	if err != nil {
-		fmt.Printf("File error: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Create structure accessible from wrench file
+var getTmplContextEnviron = func() *map[string]string {
 	Environ := make(map[string]string)
-	type TemplateContext struct {
-		Environ *map[string]string
-	}
-	tmpl_context := TemplateContext{
-		Environ: &Environ,
-	}
 
 	// Get all environment variables
-	for _, item := range os.Environ() {
+	for _, item := range getEnviron() {
 		splits := strings.Split(item, "=")
 		Environ[splits[0]] = strings.Join(splits[1:], "=")
 	}
 
-	// Create template from wrench file
-	var rendered_config bytes.Buffer
-	tmpl, err := template.New("config").Parse(string(file))
+	return &Environ
+}
+
+var getConfigContent = func() (string, error) {
+	if !utils.FileExists("./wrench.yml") {
+		return "", nil
+	}
+
+	content, err := ioutil.ReadFile("./wrench.yml")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return "", err
+	}
+
+	return strings.TrimSpace(string(content)), nil
+}
+
+var getRenderedConfigContent = func(content string) (string, error) {
+	// Create template from wrench file
+	var config_rendered bytes.Buffer
+	tmpl, err := template.New("config").Parse(content)
+	if err != nil {
+		return "", err
+	}
+
+	// Get context for template
+	tmpl_context := TemplateContext{
+		Environ: getTmplContextEnviron(),
 	}
 
 	// Render template with tmpl_context
-	err = tmpl.Execute(&rendered_config, tmpl_context)
+	err = tmpl.Execute(&config_rendered, tmpl_context)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return "", err
 	}
 
+	return config_rendered.String(), nil
+}
+
+var unmarshallConfigRun = func(item yaml.MapItem) (string, Run, error) {
+	run := Run{}
+
+	name, ok := item.Key.(string)
+	if ok != true {
+		return name, run, errors.New("Unable to unmarshall run item")
+	}
+
+	// No more values provided if value is a string
+	cmd_string, ok := item.Value.(string)
+	if ok {
+		// Simple string structure
+		// foobar: run command
+		run.Cmd = strings.TrimSpace(cmd_string)
+	} else {
+		// Expanded structure
+		// foobar:
+		//   Cmd: run command
+		//   Env: ...
+		run_expanded, ok := item.Value.(yaml.MapSlice)
+		if !ok {
+			return name, run, errors.New(fmt.Sprintf("Unable to parse run item as map for %s", name))
+		}
+
+		for k := range run_expanded {
+			if run_expanded[k].Key.(string) == "Cmd" {
+				cmd_string, ok = run_expanded[k].Value.(string)
+				if !ok {
+					return name, run, errors.New(fmt.Sprintf("Unable to parse Cmd item as string for run item %s", name))
+				}
+				run.Cmd = strings.TrimSpace(cmd_string)
+			} else if run_expanded[k].Key.(string) == "Env" {
+				env_list, ok := run_expanded[k].Value.([]interface{})
+				if !ok {
+					return name, run, errors.New(fmt.Sprintf("Unable to parse Env as list for run item %s", name))
+				}
+				for _, s := range env_list {
+					t, ok := s.(string)
+					if ok {
+						run.Env = append(run.Env, t)
+					} else {
+						return name, run, errors.New(fmt.Sprintf("Unable to parse Env item as string for run item %s", name))
+					}
+				}
+			}
+		}
+	}
+
+	if run.Cmd == "" {
+		return name, run, errors.New(fmt.Sprintf("Cmd empty for %s", name))
+	}
+
+	return name, run, nil
+}
+
+var unmarshallConfig = func(content string) (Config, error) {
 	type UnmarshalConfig struct {
 		Project Project       `yaml:"Project"`
 		Run     yaml.MapSlice `yaml:"Run,omitempty"`
 	}
-	uconfig := UnmarshalConfig{}
 
-	// Load the expected yaml file structure from rendered config
-	err = yaml.Unmarshal(rendered_config.Bytes(), &uconfig)
+	uconfig := UnmarshalConfig{}
+	config := Config{}
+
+	// Load the expected yaml file structure
+	err := yaml.Unmarshal([]byte(content), &uconfig)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return config, errors.New("Unable to unmarshall Run as map")
 	}
 
 	// Get Project from unmarshalled config
 	config.Project = uconfig.Project
+
+	// Create Run map in config
 	config.Run = make(map[string]Run)
 
-	// Handle errors parsing dynamic structure of Run
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Printf("ERROR: Unexpected yaml structure for Run\n")
-			os.Exit(1)
-		}
-	}()
-
-	// Handle dynamic structure of Run map
+	// Unmarshal every run item in Run map
 	for _, item := range uconfig.Run {
-		name, ok := item.Key.(string)
-		if ok != true {
-			fmt.Println("ERROR: Unexpected yaml structure for Run")
-			os.Exit(1)
+		name, run, err := unmarshallConfigRun(item)
+		if err != nil {
+			return config, err
 		}
-
-		run := Run{}
-
-		// No more values provided if value is a string
-		run.Cmd, ok = item.Value.(string)
-		if ok {
-			config.Run[name] = run
-			continue
-		}
-
-		r := item.Value.(yaml.MapSlice)
-		for k := range r {
-			if r[k].Key.(string) == "Cmd" {
-				run.Cmd = r[k].Value.(string)
-			} else if r[k].Key.(string) == "Env" {
-				for _, a := range r[k].Value.([]interface{}) {
-					run.Env = append(run.Env, a.(string))
-				}
-			} else {
-				panic(fmt.Sprintf("Unknown key %s\n", r[k].Key.(string)))
-			}
-		}
-
-		if run.Cmd == "" {
-			fmt.Printf("ERROR: Unexpected yaml structure for Run.%s\n", name)
-			os.Exit(1)
-		}
-
 		config.Run[name] = run
 	}
+
+	return config, nil
 }
 
-func generateAllConfig() {
-	GetProjectOrganization()
-	GetProjectName()
-	GetProjectVersion()
-	GetProjectImage()
+func loadConfigFile() (Config, error) {
+	// Get wrench file content
+	config_content, err := getConfigContent()
+
+	if err != nil {
+		return Config{}, err
+	}
+
+	// Return if config file content is empty
+	if config_content == "" {
+		return Config{}, nil
+	}
+
+	config_rendered, err := getRenderedConfigContent(config_content)
+	if err != nil {
+		return Config{}, err
+	}
+
+	// Return if rendered_config content is empty
+	if config_rendered == "" {
+		return Config{}, nil
+	}
+
+	config, err := unmarshallConfig(config_rendered)
+	if err != nil {
+		return Config{}, err
+	}
+
+	return config, nil
 }
 
 func GetProjectOrganization() string {
@@ -227,17 +295,18 @@ func GetRun(name string) (Run, bool) {
 	return val, ok
 }
 
-var getFqdn = func() string {
-	fqdn, err := exec.Command("sh", "-c", "hostname -f").Output()
-	if err != nil {
-		panic(err)
-	}
-	return string(fqdn)
+var getHostname = func() (string, error) {
+	return os.Hostname()
 }
 
 func detectProjectOrganization() string {
-	fqdn := getFqdn()
-	parts := strings.Split(string(fqdn), ".")
+	hostname, err := getHostname()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	parts := strings.Split(string(hostname), ".")
 
 	var org string
 	if len(parts) <= 2 {
@@ -278,16 +347,16 @@ var runCmd = func(command string) (int, string) {
 	return exitcode, string(out)
 }
 
-var gitRepoPresent = func() error {
+var getGitRepoPresent = func() (bool, error) {
 	exitcode, out := runCmd("git rev-parse --short HEAD")
 	if exitcode == 127 {
-		return errors.New("No git executable found")
+		return false, errors.New("No git executable found")
 	} else if exitcode == 128 {
-		return errors.New("Not a git repository")
+		return false, errors.New("Not a git repository")
 	} else if exitcode != 0 {
-		return errors.New(out)
+		return false, errors.New(out)
 	}
-	return nil
+	return true, nil
 }
 
 var getGitSemverTag = func() (string, error) {
@@ -308,7 +377,7 @@ var getGitSemverTag = func() (string, error) {
 
 func detectProjectVersion() string {
 	// make sure git is installed and we are inside a git repo
-	if err := gitRepoPresent(); err != nil {
+	if present, err := getGitRepoPresent(); !present {
 		fmt.Println(err)
 		os.Exit(1)
 	}

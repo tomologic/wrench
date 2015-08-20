@@ -3,10 +3,11 @@ package config
 var mocked_functions = map[string]interface{}{
 	"getAbsFilePath":         getAbsFilePath,
 	"generateInitialVersion": generateInitialVersion,
-	"getFqdn":                getFqdn,
+	"getHostname":            getHostname,
 	"getGitCommitCount":      getGitCommitCount,
 	"getGitSemverTag":        getGitSemverTag,
 	"getGitShortSha":         getGitShortSha,
-	"gitRepoPresent":         gitRepoPresent,
+	"getGitRepoPresent":      getGitRepoPresent,
 	"runCmd":                 runCmd,
+	"unmarshallConfigRun":    unmarshallConfigRun,
 }

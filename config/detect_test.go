@@ -16,16 +16,16 @@ func TestDetectTestSuite(t *testing.T) {
 }
 
 func (suite *DetectTestSuite) SetupSuite() {
-	gitRepoPresent = func() error { return nil }
+	getGitRepoPresent = func() (bool, error) { return true, nil }
 }
 
 func (suite *DetectTestSuite) TearDownSuite() {
-	gitRepoPresent = mocked_functions["gitRepoPresent"].(func() error)
+	getGitRepoPresent = mocked_functions["getGitRepoPresent"].(func() (bool, error))
 }
 
 func (suite *DetectTestSuite) TearDownTest() {
 	getAbsFilePath = mocked_functions["getAbsFilePath"].(func() string)
-	getFqdn = mocked_functions["getFqdn"].(func() string)
+	getHostname = mocked_functions["getHostname"].(func() (string, error))
 	runCmd = mocked_functions["runCmd"].(func(string) (int, string))
 	getGitSemverTag = mocked_functions["getGitSemverTag"].(func() (string, error))
 	generateInitialVersion = mocked_functions["generateInitialVersion"].(func() string)
@@ -53,29 +53,29 @@ func (suite *DetectTestSuite) TestDetectProjectNameSub() {
 }
 
 func (suite *DetectTestSuite) TestDetectProjectOrganizationSingle() {
-	getFqdn = func() string {
-		return "user"
+	getHostname = func() (string, error) {
+		return "user", nil
 	}
 	assert.Equal(suite.T(), "user", detectProjectOrganization())
 }
 
 func (suite *DetectTestSuite) TestDetectProjectOrganizationLocal() {
-	getFqdn = func() string {
-		return "user.local"
+	getHostname = func() (string, error) {
+		return "user.local", nil
 	}
 	assert.Equal(suite.T(), "local", detectProjectOrganization())
 }
 
 func (suite *DetectTestSuite) TestDetectProjectOrganizationDomain() {
-	getFqdn = func() string {
-		return "hostname.domain.topdomain"
+	getHostname = func() (string, error) {
+		return "hostname.domain.topdomain", nil
 	}
 	assert.Equal(suite.T(), "domain", detectProjectOrganization())
 }
 
 func (suite *DetectTestSuite) TestDetectProjectOrganizationSubDomain() {
-	getFqdn = func() string {
-		return "hostname.subdomain.domain.topdomain"
+	getHostname = func() (string, error) {
+		return "hostname.subdomain.domain.topdomain", nil
 	}
 	assert.Equal(suite.T(), "domain", detectProjectOrganization())
 }
