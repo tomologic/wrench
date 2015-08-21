@@ -339,7 +339,7 @@ func detectProjectName() string {
 
 var runCmd = func(command string) (int, string) {
 	exitcode := 0
-	cmd := exec.Command(fmt.Sprintf("sh -c %s", command))
+	cmd := exec.Command("sh", "-c", command)
 	out, err := cmd.Output()
 	if err != nil {
 		exitcode = utils.GetCommandExitCode(err)
@@ -396,7 +396,7 @@ var getGitCommitCount = func() (int, error) {
 		return 0, errors.New(out)
 	}
 
-	num, err := strconv.Atoi(out)
+	num, err := strconv.Atoi(strings.TrimSpace(out))
 	if err != nil {
 		return 0, err
 	}
