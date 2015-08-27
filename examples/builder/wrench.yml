@@ -1,7 +1,6 @@
 Project:
   Organization: example
   Name: builder
-  Version: v1.0.0
 Run:
   go-test: |
     #!/bin/bash -xe

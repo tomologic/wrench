@@ -61,9 +61,9 @@ func (suite *DetectTestSuite) TestDetectProjectOrganizationSingle() {
 
 func (suite *DetectTestSuite) TestDetectProjectOrganizationLocal() {
 	getHostname = func() (string, error) {
-		return "user.local", nil
+		return "hostname.domain", nil
 	}
-	assert.Equal(suite.T(), "local", detectProjectOrganization())
+	assert.Equal(suite.T(), "domain", detectProjectOrganization())
 }
 
 func (suite *DetectTestSuite) TestDetectProjectOrganizationDomain() {

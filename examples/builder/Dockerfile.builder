@@ -1,4 +1,8 @@
-FROM golang
+FROM debian:jessie
+
+RUN apt-get update && \
+    apt-get install -y golang && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Create src directory for compiling artifacts
 ADD . /src
