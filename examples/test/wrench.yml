@@ -1,6 +1,5 @@
 Project:
   Organization: example
   Name: test
-  Version: v1.0.0
 Run:
   syntax-test: flake8 -v .

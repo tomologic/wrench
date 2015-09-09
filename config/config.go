@@ -296,7 +296,11 @@ func GetRun(name string) (Run, bool) {
 }
 
 var getHostname = func() (string, error) {
-	return os.Hostname()
+	exitcode, out := runCmd("hostname -f")
+	if exitcode != 0 {
+		return "", errors.New(fmt.Sprintf("hostname exited with %d", exitcode))
+	}
+	return out, nil
 }
 
 func detectProjectOrganization() string {

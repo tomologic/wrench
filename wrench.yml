@@ -1,0 +1,6 @@
+Project:
+  Organization: tomologic
+  Name: wrench
+Run:
+  unit-test: cd /go/src/github.com/tomologic/wrench/; go test -v ./...
+  integration-test: cd /go/src/github.com/tomologic/wrench/; bats ./bats
