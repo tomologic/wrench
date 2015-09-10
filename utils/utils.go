@@ -74,3 +74,13 @@ func DockerRemoveImage(name string) bool {
 	}
 	return true
 }
+
+func RunCmd(command string) (int, string) {
+	exitcode := 0
+	cmd := exec.Command("sh", "-c", command)
+	out, err := cmd.Output()
+	if err != nil {
+		exitcode = GetCommandExitCode(err)
+	}
+	return exitcode, string(out)
+}

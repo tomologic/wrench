@@ -185,3 +185,21 @@ func (suite *SemverTestSuite) TestSemverString() {
 		assert.Equal(suite.T(), ex.Expected, str)
 	}
 }
+
+func (suite *SemverTestSuite) TestSemverIsReleaseVersion() {
+	var examples = []struct {
+		Expected bool
+		Input    Semver
+	}{
+		{true, Semver{1, 2, 3, ""}},
+		{true, Semver{123, 456, 789, ""}},
+		{false, Semver{1, 2, 3, "1-gaoeu123"}},
+		{false, Semver{123, 456, 789, "1-gaoeu123"}},
+	}
+
+	for _, ex := range examples {
+		actual := ex.Input.IsReleaseVersion()
+
+		assert.Equal(suite.T(), ex.Expected, actual)
+	}
+}

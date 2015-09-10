@@ -90,3 +90,10 @@ func (s Semver) String() string {
 		return fmt.Sprintf("v%d.%d.%d-%s", s.Major, s.Minor, s.Patch, s.Snapshot)
 	}
 }
+
+func (s Semver) IsReleaseVersion() bool {
+	if s.Snapshot == "" {
+		return true
+	}
+	return false
+}
