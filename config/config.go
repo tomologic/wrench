@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -342,13 +341,7 @@ func detectProjectName() string {
 }
 
 var runCmd = func(command string) (int, string) {
-	exitcode := 0
-	cmd := exec.Command("sh", "-c", command)
-	out, err := cmd.Output()
-	if err != nil {
-		exitcode = utils.GetCommandExitCode(err)
-	}
-	return exitcode, string(out)
+	return utils.RunCmd(command)
 }
 
 var getGitRepoPresent = func() (bool, error) {
