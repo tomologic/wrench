@@ -30,11 +30,11 @@ before_deploy: |
   } || {
     set -e
     # Bump new version
-    wget -O semver https://gist.githubusercontent.com/loa/435da12af9494a112daf/raw/semver.sh
-    chmod u+x semver
+    wget -O semver.sh https://gist.githubusercontent.com/loa/435da12af9494a112daf/raw/semver.sh
+    chmod u+x semver.sh
     git config user.name "Travis CI"
     git config user.email "notifications@travis-ci.org"
-    git tag -a v$(./semver bump minor) -m "Version v$(./semver bump minor)"
+    git tag -a v$(./semver.sh bump minor) -m "Version v$(./semver.sh bump minor)"
     git push --quiet "https://${GH_TOKEN}@${GH_REF}" --tags > /dev/null 2>&1
   }
 
