@@ -1,6 +1,21 @@
 #!/usr/bin/env bats
 
 setup () {
+    # Create and enter temp directory
+    BATS_TMP_DIR=$(mktemp -d .wrench-bats.XXXXX)
+    pushd $BATS_TMP_DIR
+
+    ORGANIZATION="example"
+    NAME="wrenchtests"
+    VERSION="v1.0.0"
+
+    cat >wrench.yml<<EOF
+Project:
+    Name: $NAME
+    Organization: $ORGANIZATION
+    Version: $VERSION
+EOF
+
     # Get base image for bogus docker image
     BASE_IMAGE="busybox"
     if docker history -q $BASE_IMAGE; then
@@ -9,8 +24,9 @@ setup () {
         docker pull $BASE_IMAGE
     fi
 
-    TEST_IMAGE_NAME="bats/wrenchtests"
-    TEST_IMAGE_TAG="v1.0.0"
+    TEST_IMAGE_NAME="$ORGANIZATION/$NAME"
+    TEST_IMAGE_TAG=$VERSION
+
     TEST_IMAGE="$TEST_IMAGE_NAME:$TEST_IMAGE_TAG"
     # Create bogus docker image for tests
     if docker history -q $TEST_IMAGE > /dev/null 2>&1; then
@@ -55,12 +71,16 @@ setup () {
 teardown () {
     echo
     echo "# TEARDOWN START"
+
+    # Exit temp test directory
+    popd
+    rm -rf $BATS_TMP_DIR
+
     # Stop docker registry
     docker rm -f $REGISTRY_ID
 
     # Remove all images assosiated with temporary registries
-    # TODO: remove and add verification that wrench do the cleanup
-    test_images=$(docker images | grep -o "$REGISTRY.*bats\/\S*[[:space:]]*\S*" | tr -s ' ' | sed 's/\ /:/')
+    test_images=$(docker images | grep -o "$REGISTRY.*example\/\S*[[:space:]]*\S*" | tr -s ' ' | sed 's/\ /:/')
     if [ -n "$test_images" ]; then
         docker rmi $test_images
     fi
@@ -78,54 +98,97 @@ json_stemming() {
 }
 
 @test "PUSH: Push image to registry" {
-    # TODO: Replace with wrench command
-    # wrench push
-    docker tag $TEST_IMAGE $REGISTRY/$TEST_IMAGE
-    docker push $REGISTRY/$TEST_IMAGE
+    # docker tag $TEST_IMAGE $REGISTRY/$TEST_IMAGE
+    # docker push $REGISTRY/$TEST_IMAGE
+
+    run wrench push $REGISTRY
+    [ "$status" -eq 0 ]
+    echo "output=$output"
 
     actual=$(json_stemming $(curl "$REGISTRY_API_URL/v2/$TEST_IMAGE_NAME/tags/list"))
     echo "actual=$actual"
 
-    expected=$(json_stemming '{"name":"bats/wrenchtests","tags":["v1.0.0"]}')
+    expected=$(json_stemming '{"name":"example/wrenchtests","tags":["v1.0.0"]}')
     echo "expected=$expected"
 
     [ "$actual" == "$expected" ]
+
+    # Make sure wrench cleanup temporary images
+    temporary_images=$(docker images | grep -o "$REGISTRY.*example\/\S*[[:space:]]*\S*" | tr -s ' ' | sed 's/\ /:/')
+    echo "temporary_images=$temporary_images"
+    [ -z "$test_images" ]
 }
 
 @test "PUSH: Additional tag" {
-    # TODO: Replace with wrench command
-    # wrench push --additional-tags additional
-    docker tag $TEST_IMAGE $REGISTRY/$TEST_IMAGE
-    docker tag $TEST_IMAGE "$REGISTRY/$TEST_IMAGE_NAME:additional"
-    docker push $REGISTRY/$TEST_IMAGE
-    docker push "$REGISTRY/$TEST_IMAGE_NAME:additional"
+    # docker tag $TEST_IMAGE $REGISTRY/$TEST_IMAGE
+    # docker tag $TEST_IMAGE "$REGISTRY/$TEST_IMAGE_NAME:additional"
+    # docker push $REGISTRY/$TEST_IMAGE
+    # docker push "$REGISTRY/$TEST_IMAGE_NAME:additional"
+
+    run wrench push $REGISTRY --additional-tags additional
+    [ "$status" -eq 0 ]
+    echo "output=$output"
 
     actual=$(json_stemming $(curl "$REGISTRY_API_URL/v2/$TEST_IMAGE_NAME/tags/list"))
     echo "actual=$actual"
 
-    expected=$(json_stemming '{"name":"bats/wrenchtests","tags":["v1.0.0","additional"]}')
+    expected=$(json_stemming '{"name":"example/wrenchtests","tags":["v1.0.0","additional"]}')
     echo "expected=$expected"
 
     [ "$actual" == "$expected" ]
+
+    # Make sure wrench cleanup temporary images
+    temporary_images=$(docker images | grep -o "$REGISTRY.*example\/\S*[[:space:]]*\S*" | tr -s ' ' | sed 's/\ /:/')
+    echo "temporary_images=$temporary_images"
+    [ -z "$test_images" ]
 }
 
 @test "PUSH: Several additional tags" {
-    # TODO: Replace with wrench command
-    # wrench push --additional-tags additional,latest,tag3
-    docker tag $TEST_IMAGE $REGISTRY/$TEST_IMAGE
-    docker tag $TEST_IMAGE "$REGISTRY/$TEST_IMAGE_NAME:additional"
-    docker tag $TEST_IMAGE "$REGISTRY/$TEST_IMAGE_NAME:latest"
-    docker tag $TEST_IMAGE "$REGISTRY/$TEST_IMAGE_NAME:tag3"
-    docker push $REGISTRY/$TEST_IMAGE
-    docker push "$REGISTRY/$TEST_IMAGE_NAME:additional"
-    docker push "$REGISTRY/$TEST_IMAGE_NAME:latest"
-    docker push "$REGISTRY/$TEST_IMAGE_NAME:tag3"
+    # docker tag $TEST_IMAGE $REGISTRY/$TEST_IMAGE
+    # docker tag $TEST_IMAGE "$REGISTRY/$TEST_IMAGE_NAME:additional"
+    # docker tag $TEST_IMAGE "$REGISTRY/$TEST_IMAGE_NAME:latest"
+    # docker tag $TEST_IMAGE "$REGISTRY/$TEST_IMAGE_NAME:tag3"
+    # docker push $REGISTRY/$TEST_IMAGE
+    # docker push "$REGISTRY/$TEST_IMAGE_NAME:additional"
+    # docker push "$REGISTRY/$TEST_IMAGE_NAME:latest"
+    # docker push "$REGISTRY/$TEST_IMAGE_NAME:tag3"
+
+    run wrench push $REGISTRY --additional-tags additional,latest,tag3
+    [ "$status" -eq 0 ]
+    echo "output=$output"
 
     actual=$(json_stemming $(curl "$REGISTRY_API_URL/v2/$TEST_IMAGE_NAME/tags/list"))
     echo "actual=$actual"
 
-    expected=$(json_stemming '{"name":"bats/wrenchtests","tags":["v1.0.0","latest","additional","tag3"]}')
+    expected=$(json_stemming '{"name":"example/wrenchtests","tags":["v1.0.0","latest","additional","tag3"]}')
     echo "expected=$expected"
 
     [ "$actual" == "$expected" ]
+
+    # Make sure wrench cleanup temporary images
+    temporary_images=$(docker images | grep -o "$REGISTRY.*example\/\S*[[:space:]]*\S*" | tr -s ' ' | sed 's/\ /:/')
+    echo "temporary_images=$temporary_images"
+    [ -z "$test_images" ]
+}
+
+@test "PUSH: Image missing" {
+    docker rmi -f $TEST_IMAGE >/dev/null 2>&1
+
+    run wrench push $REGISTRY
+    [ "$status" -eq 1 ]
+    echo "output=$output"
+
+    actual=$(curl "$REGISTRY_API_URL/v2/$TEST_IMAGE_NAME/tags/list")
+    echo "actual=$actual"
+
+    expected='NAME_UNKNOWN'
+    echo "expected=$expected"
+
+    [[ "$actual" == *"$expected"* ]]
+}
+
+@test "PUSH: Registry missing" {
+    run wrench push "thishostnameshouldnotexist:10"
+    echo "output=$output"
+    [ "$status" -eq 1 ]
 }
