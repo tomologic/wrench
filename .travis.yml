@@ -19,6 +19,9 @@ install: |
   pushd bats_install
   sudo bash install.sh /usr/local
   popd
+before_script:
+  # https://github.com/zuazo/kitchen-in-travis-native/issues/1#issuecomment-142455888
+  sudo iptables -L DOCKER || sudo iptables -N DOCKER
 script: |
   go test ./... -v
   bats ./bats
