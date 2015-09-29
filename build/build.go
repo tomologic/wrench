@@ -12,7 +12,6 @@ import (
 )
 
 var flag_rebuild bool
-var image_name string
 
 func AddToWrench(rootCmd *cobra.Command) {
 	var cmdBuild = &cobra.Command{
@@ -29,7 +28,7 @@ func AddToWrench(rootCmd *cobra.Command) {
 }
 
 func build() {
-	image_name = config.GetProjectImage()
+	image_name := config.GetProjectImage()
 
 	if !flag_rebuild && utils.DockerImageExists(image_name) {
 		fmt.Printf("INFO: Docker image %s already exists\n", image_name)
@@ -55,6 +54,8 @@ func build() {
 }
 
 func buildBuilder() {
+	image_name := config.GetProjectImage()
+
 	builder_image_name := fmt.Sprintf("%s-builder", image_name)
 
 	fmt.Printf("INFO: %s %s\n\n",
@@ -67,6 +68,10 @@ func buildBuilder() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
+
+	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n",
+		config.GetProjectVersion())
+	utils.DockerImageAddEnv(builder_image_name, "VERSION", config.GetProjectVersion())
 
 	if err != nil {
 		fmt.Println(err)
@@ -88,9 +93,15 @@ func buildBuilder() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n",
+		config.GetProjectVersion())
+	utils.DockerImageAddEnv(image_name, "VERSION", config.GetProjectVersion())
 }
 
 func buildSimple() {
+	image_name := config.GetProjectImage()
+
 	fmt.Printf("INFO: %s %s\n\n",
 		"Found Dockerfile, building image",
 		image_name)
@@ -105,9 +116,15 @@ func buildSimple() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n",
+		config.GetProjectVersion())
+	utils.DockerImageAddEnv(image_name, "VERSION", config.GetProjectVersion())
 }
 
 func buildTest() {
+	image_name := config.GetProjectImage()
+
 	test_image_name := fmt.Sprintf("%s-test", image_name)
 
 	if !utils.FileExists("./Dockerfile.test") {

@@ -77,10 +77,34 @@ func DockerRemoveImage(name string) bool {
 	return true
 }
 
+func DockerImageAddEnv(image, env, value string) error {
+	var files = make([]Tarfile, 2)
+	files[0] = Tarfile{
+		"Dockerfile",
+		fmt.Sprintf("FROM %s\nENV %s %s\n", image, env, value),
+	}
+	tarfile, err := CreateTar(files)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("docker", "build", "-t", image, "-")
+
+	// Open the tar archive for reading.
+	cmd.Stdin = bytes.NewReader(tarfile.Bytes())
+
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func RunCmd(command string) (int, string) {
 	exitcode := 0
 	cmd := exec.Command("sh", "-c", command)
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		exitcode = GetCommandExitCode(err)
 	}

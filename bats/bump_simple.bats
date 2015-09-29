@@ -38,21 +38,21 @@ teardown () {
 
     # test to bump initial version
     run wrench bump minor
-    echo "output=$output"
-    echo "status=$status"
+    echo "bump output=$output"
+    echo "bump status=$status"
     [ "$status" -eq 0 ]
     [ "$output" = "Released v0.1.0" ]
 
     # verify tag exists origin
     run cd ../origin && git rev-list v0.1.0..
-    echo "output=$output"
-    echo "status=$status"
+    echo "origin output=$output"
+    echo "origin status=$status"
     [ "$status" -eq 0 ]
 
     # verify image exists
     run docker inspect example/simple:v0.1.0
-    echo "output=$output"
-    echo "status=$status"
+    echo "image output=$output"
+    echo "image status=$status"
     [ "$status" -eq 0 ]
 }
 
