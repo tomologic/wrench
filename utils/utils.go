@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"archive/tar"
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -83,4 +85,37 @@ func RunCmd(command string) (int, string) {
 		exitcode = GetCommandExitCode(err)
 	}
 	return exitcode, string(out)
+}
+
+type Tarfile struct {
+	Name, Content string
+}
+
+func CreateTar(files []Tarfile) (*bytes.Buffer, error) {
+	// Create a buffer to write our archive to.
+	buf := new(bytes.Buffer)
+
+	// Create a new tar archive.
+	tw := tar.NewWriter(buf)
+
+	// Add some files to the archive.
+	for _, file := range files {
+		hdr := &tar.Header{
+			Name: file.Name,
+			Mode: 0600,
+			Size: int64(len(file.Content)),
+		}
+		if err := tw.WriteHeader(hdr); err != nil {
+			return nil, err
+		}
+		if _, err := tw.Write([]byte(file.Content)); err != nil {
+			return nil, err
+		}
+	}
+	// Make sure to check the error on Close.
+	if err := tw.Close(); err != nil {
+		return nil, err
+	}
+
+	return buf, nil
 }
