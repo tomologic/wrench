@@ -38,7 +38,7 @@ func run(name string) {
 
 	run, ok := config.GetRun(name)
 	if ok == false {
-		fmt.Println("ERROR: %s not found in wrench.yml", name)
+		fmt.Printf("ERROR: %s not found in wrench.yml\n", name)
 		os.Exit(1)
 	}
 
