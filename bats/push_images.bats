@@ -171,6 +171,25 @@ json_stemming() {
     [ -z "$test_images" ]
 }
 
+@test "PUSH: Additional tags flag empty" {
+    run wrench push $REGISTRY --additional-tags ""
+    [ "$status" -eq 0 ]
+    echo "output=$output"
+
+    actual=$(json_stemming $(curl "$REGISTRY_API_URL/v2/$TEST_IMAGE_NAME/tags/list"))
+    echo "actual=$actual"
+
+    expected=$(json_stemming '{"name":"example/wrenchtests","tags":["v1.0.0"]}')
+    echo "expected=$expected"
+
+    [ "$actual" == "$expected" ]
+
+    # Make sure wrench cleanup temporary images
+    temporary_images=$(docker images | grep -o "$REGISTRY.*example\/\S*[[:space:]]*\S*" | tr -s ' ' | sed 's/\ /:/')
+    echo "temporary_images=$temporary_images"
+    [ -z "$test_images" ]
+}
+
 @test "PUSH: Image missing" {
     docker rmi -f $TEST_IMAGE >/dev/null 2>&1
 
