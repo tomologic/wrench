@@ -78,22 +78,16 @@ func DockerRemoveImage(name string) bool {
 }
 
 func DockerImageAddEnv(image, env, value string) error {
-	var files = make([]Tarfile, 2)
-	files[0] = Tarfile{
-		"Dockerfile",
-		fmt.Sprintf("FROM %s\nENV %s %s\n", image, env, value),
-	}
-	tarfile, err := CreateTar(files)
-	if err != nil {
-		return err
-	}
+	// Dockerfile for adding ENV
+	dockerfile := fmt.Sprintf("FROM %s\nENV %s %s\n", image, env, value)
 
+	// Run docker build
 	cmd := exec.Command("docker", "build", "-t", image, "-")
 
-	// Open the tar archive for reading.
-	cmd.Stdin = bytes.NewReader(tarfile.Bytes())
+	// Pass dockerfile through stdin
+	cmd.Stdin = bytes.NewReader([]byte(dockerfile))
 
-	err = cmd.Run()
+	err := cmd.Run()
 	if err != nil {
 		return err
 	}
