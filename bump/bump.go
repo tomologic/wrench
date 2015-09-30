@@ -81,6 +81,14 @@ func bump(level string) error {
 		os.Exit(1)
 	}
 
+	if err := utils.DockerImageAddEnv(new_image_name, "VERSION", version.String()); err != nil {
+		// remove image which is unfinished
+		utils.DockerRemoveImage(new_image_name)
+
+		fmt.Printf("ERROR: Failed updating VERSION env\n")
+		os.Exit(1)
+	}
+
 	// push tag; if err
 	if exitcode, out := utils.RunCmd(fmt.Sprintf("git push origin %s", version.String())); exitcode != 0 {
 		fmt.Printf("ERROR: git push tag exited with %d: %s\n", exitcode, out)
