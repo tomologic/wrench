@@ -91,7 +91,7 @@ func push(registry string, additional_tags string) error {
 
 func tag_image(image_name string, new_image_name string) error {
 	command := fmt.Sprintf(
-		"docker tag %s %s",
+		"docker tag -f %s %s",
 		image_name,
 		new_image_name)
 
