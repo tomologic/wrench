@@ -69,9 +69,9 @@ func buildBuilder() {
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 
-	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n",
-		config.GetProjectVersion())
-	utils.DockerImageAddEnv(builder_image_name, "VERSION", config.GetProjectVersion())
+	version := strings.TrimLeft(config.GetProjectVersion(), "v")
+	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n", version)
+	utils.DockerImageAddEnv(builder_image_name, "VERSION", version)
 
 	if err != nil {
 		fmt.Println(err)
@@ -94,9 +94,8 @@ func buildBuilder() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n",
-		config.GetProjectVersion())
-	utils.DockerImageAddEnv(image_name, "VERSION", config.GetProjectVersion())
+	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n", version)
+	utils.DockerImageAddEnv(image_name, "VERSION", version)
 }
 
 func buildSimple() {
@@ -117,9 +116,9 @@ func buildSimple() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n",
-		config.GetProjectVersion())
-	utils.DockerImageAddEnv(image_name, "VERSION", config.GetProjectVersion())
+	version := strings.TrimLeft(config.GetProjectVersion(), "v")
+	fmt.Printf("INFO: Adding env variable VERSION=%s\n\n", version)
+	utils.DockerImageAddEnv(image_name, "VERSION", version)
 }
 
 func buildTest() {

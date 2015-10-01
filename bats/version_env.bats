@@ -57,7 +57,9 @@ teardown () {
     echo "status=$status"
     echo "lines[1]=${lines[1]}"
     [ "$status" -eq 0 ]
-    [[ "${lines[1]}" == *"CURRENT VERSION $(git describe)"* ]]
+    # remove leading v since wrench adds valid semver to VERSION
+    VERSION=$(git describe | sed 's/^v//')
+    [[ "${lines[1]}" == *"CURRENT VERSION $VERSION"* ]]
 }
 
 @test "VERSION: add version on release image" {
@@ -70,7 +72,7 @@ teardown () {
     echo "status=$status"
     echo "lines[1]=${lines[1]}"
     [ "$status" -eq 0 ]
-    [[ "${lines[1]}" == *"CURRENT VERSION v0.1.0"* ]]
+    [[ "${lines[1]}" == *"CURRENT VERSION 0.1.0"* ]]
 }
 
 @test "VERSION: update version on bump" {
@@ -92,5 +94,5 @@ teardown () {
     echo "run status=$status"
     echo "run lines[1]=${lines[1]}"
     [ "$status" -eq 0 ]
-    [[ "${lines[1]}" == *"CURRENT VERSION v0.2.0"* ]]
+    [[ "${lines[1]}" == *"CURRENT VERSION 0.2.0"* ]]
 }

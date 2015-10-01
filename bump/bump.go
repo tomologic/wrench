@@ -3,6 +3,7 @@ package bump
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/tomologic/wrench/config"
 	"github.com/tomologic/wrench/semver"
@@ -81,7 +82,8 @@ func bump(level string) error {
 		os.Exit(1)
 	}
 
-	if err := utils.DockerImageAddEnv(new_image_name, "VERSION", version.String()); err != nil {
+	ver := strings.TrimLeft(version.String(), "v")
+	if err := utils.DockerImageAddEnv(new_image_name, "VERSION", ver); err != nil {
 		// remove image which is unfinished
 		utils.DockerRemoveImage(new_image_name)
 
