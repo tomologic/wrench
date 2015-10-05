@@ -6,3 +6,7 @@ Run:
     #!/bin/bash -xe
 
     echo "run syntax check"
+  echo-version: |
+    #!/bin/bash -xe
+
+    echo $VERSION
