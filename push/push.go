@@ -37,20 +37,10 @@ func AddToWrench(rootCmd *cobra.Command) {
 	rootCmd.AddCommand(cmdBump)
 }
 
-func remove_empty_strings(s []string) []string {
-	var r []string
-	for _, str := range s {
-		if str != "" {
-			r = append(r, str)
-		}
-	}
-	return r
-}
-
 func push(registry string, additional_tags string) error {
 	tags := strings.Split(additional_tags, ",")
 	tags = append(tags, config.GetProjectVersion())
-	tags = remove_empty_strings(tags)
+	tags = utils.RemoveEmptyStrings(tags)
 
 	for _, tag := range tags {
 		image_name := fmt.Sprintf("%s/%s:%s",

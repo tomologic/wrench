@@ -398,6 +398,9 @@ var getGitCommitCount = func() (int, error) {
 		return 0, err
 	}
 
+	// Get number of commits since initial commit instead of total
+	num -= 1
+
 	return num, nil
 }
 
@@ -416,6 +419,7 @@ var getGitShortSha = func() (string, error) {
 var generateInitialVersion = func() string {
 	// Get number of commits
 	num_commits, err := getGitCommitCount()
+
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

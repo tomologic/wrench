@@ -14,6 +14,8 @@ type Semver struct {
 	Snapshot string
 }
 
+type SemverList []Semver
+
 func Parse(s string) (Semver, error) {
 	sv := Semver{}
 
@@ -94,6 +96,29 @@ func (s Semver) String() string {
 func (s Semver) IsReleaseVersion() bool {
 	if s.Snapshot == "" {
 		return true
+	}
+	return false
+}
+
+func (s SemverList) Len() int {
+	return len(s)
+}
+
+func (s SemverList) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s SemverList) Less(i, j int) bool {
+	if s[i].Major < s[j].Major {
+		return true
+	} else if s[i].Major == s[j].Major {
+		if s[i].Minor < s[j].Minor {
+			return true
+		} else if s[i].Minor == s[j].Minor {
+			if s[i].Patch < s[j].Patch {
+				return true
+			}
+		}
 	}
 	return false
 }

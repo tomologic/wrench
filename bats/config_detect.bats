@@ -69,7 +69,7 @@ teardown () {
     echo "ret=$ret"
     [ "$ret" -eq 0 ]
 
-    expected="Version: v0.0.0-1-g$(git rev-parse --short HEAD)"
+    expected="Version: v0.0.0-0-g$(git rev-parse --short HEAD)"
 
     echo "expected=$expected"
     echo "out=$out"

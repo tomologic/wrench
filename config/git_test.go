@@ -23,7 +23,8 @@ func (suite *GitTestSuite) TearDownTest() {
 func (suite *GitTestSuite) TestGitCommitCount() {
 	for _, i := range []int{0, 1, 5, 10, 50, 99, 100, 1000, 10000} {
 		runCmd = func(string) (int, string) {
-			return 0, fmt.Sprintf("%d", i)
+			// return +1 since git cli returns total number of commits
+			return 0, fmt.Sprintf("%d", (i + 1))
 		}
 
 		num_commits, err := getGitCommitCount()
