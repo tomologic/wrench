@@ -1,6 +1,7 @@
 package semver
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -201,5 +202,39 @@ func (suite *SemverTestSuite) TestSemverIsReleaseVersion() {
 		actual := ex.Input.IsReleaseVersion()
 
 		assert.Equal(suite.T(), ex.Expected, actual)
+	}
+}
+
+func (suite *SemverTestSuite) TestSemverSort() {
+	var unsorted = []Semver{
+		Semver{3, 3, 3, ""},
+		Semver{0, 3, 0, ""},
+		Semver{1, 1, 0, ""},
+		Semver{0, 1, 0, ""},
+		Semver{0, 2, 0, ""},
+		Semver{0, 0, 0, ""},
+		Semver{3, 3, 0, ""},
+		Semver{2, 2, 0, ""},
+		Semver{3, 3, 1, ""},
+		Semver{3, 3, 2, ""},
+	}
+
+	var sorted = []Semver{
+		Semver{0, 0, 0, ""},
+		Semver{0, 1, 0, ""},
+		Semver{0, 2, 0, ""},
+		Semver{0, 3, 0, ""},
+		Semver{1, 1, 0, ""},
+		Semver{2, 2, 0, ""},
+		Semver{3, 3, 0, ""},
+		Semver{3, 3, 1, ""},
+		Semver{3, 3, 2, ""},
+		Semver{3, 3, 3, ""},
+	}
+
+	sort.Sort(SemverList(unsorted))
+
+	for index, _ := range sorted {
+		assert.Equal(suite.T(), sorted[index], unsorted[index])
 	}
 }

@@ -44,7 +44,7 @@ teardown () {
     [ "$output" = "Released v0.1.0" ]
 
     # verify tag exists origin
-    run cd ../origin && git rev-list v0.1.0..
+    run bash -c "cd ../origin && git rev-list v0.1.0.."
     echo "origin output=$output"
     echo "origin status=$status"
     [ "$status" -eq 0 ]
@@ -61,7 +61,7 @@ teardown () {
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 1 ]
-    [[ "$output" =~ Docker\ image\ example/simple:v0\.0\.0\-1\-.*\ does\ not\ exists ]]
+    [[ "$output" =~ Docker\ image\ for\ revision\ [^\ ]*\ could\ not\ be\ found ]]
 }
 
 @test "BUMP: current revision already released" {
@@ -88,7 +88,7 @@ teardown () {
     [ "$output" = "Released v2.0.0" ]
 
     # verify tag exists origin
-    run cd ../origin && git rev-list v2.0.0..
+    run bash -c "cd ../origin && git rev-list v2.0.0.."
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 0 ]
@@ -114,7 +114,7 @@ teardown () {
     [ "$output" = "Released v1.3.0" ]
 
     # verify tag exists origin
-    run cd ../origin && git rev-list v1.3.0..
+    run bash -c "cd ../origin && git rev-list v1.3.0.."
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 0 ]
@@ -140,7 +140,7 @@ teardown () {
     [ "$output" = "Released v1.2.34" ]
 
     # verify tag exists origin
-    run cd ../origin && git rev-list v1.2.34..
+    run bash -c "cd ../origin && git rev-list v1.2.34.."
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 0 ]
@@ -176,4 +176,207 @@ teardown () {
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 1 ]
+}
+
+@test "BUMP: Chained changes from root commit" {
+    # Create chain of changes and save their gitsha
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit A" --allow-empty
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit B" --allow-empty
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit C" --allow-empty
+    # COMMIT_C=$(git rev-parse --short HEAD)
+    run wrench build
+    [ "$status" -eq 0 ]
+
+
+    VERSION=0
+    # Loop through all short sha listed from initial commit
+    while read -r line; do
+        # Increment to keep track of what should be current version
+        VERSION=$((VERSION+1))
+
+        # Checkout current change
+        git checkout $line
+
+        # Test bump
+        run wrench bump minor
+        echo "bump output=$output"
+        echo "bump status=$status"
+        [ "$status" -eq 0 ]
+        [ "$output" = "Released v0.$VERSION.0" ]
+
+        # verify tag exists origin
+        run bash -c "cd ../origin && git rev-list v0.$VERSION.0.."
+        echo "origin output=$output"
+        echo "origin status=$status"
+        [ "$status" -eq 0 ]
+
+        # verify image exists
+        run docker inspect example/simple:v0.$VERSION.0
+        echo "image output=$output"
+        echo "image status=$status"
+        [ "$status" -eq 0 ]
+
+    done <<< "$(git log --pretty=format:'%h' --reverse)"
+}
+
+@test "BUMP: Chained changes from tagged root commit" {
+    # Create chain of changes and save their gitsha
+    git tag -a v0.1.0 -m "Release v0.1.0"
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit A" --allow-empty
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit B" --allow-empty
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit C" --allow-empty
+    # COMMIT_C=$(git rev-parse --short HEAD)
+    run wrench build
+    [ "$status" -eq 0 ]
+
+
+    VERSION=1
+    # Loop through all short sha listed from initial commit
+    while read -r line; do
+        # Increment to keep track of what should be current version
+        VERSION=$((VERSION+1))
+
+        # Checkout current change
+        git checkout $line
+
+        # Test bump
+        run wrench bump minor
+        echo "bump output=$output"
+        echo "bump status=$status"
+        [ "$status" -eq 0 ]
+        [ "$output" = "Released v0.$VERSION.0" ]
+
+        # verify tag exists origin
+        run bash -c "cd ../origin && git rev-list v0.$VERSION.0.."
+        echo "origin output=$output"
+        echo "origin status=$status"
+        [ "$status" -eq 0 ]
+
+        # verify image exists
+        run docker inspect example/simple:v0.$VERSION.0
+        echo "image output=$output"
+        echo "image status=$status"
+        [ "$status" -eq 0 ]
+
+    done <<< "$(git log --pretty=format:'%h' --reverse | tail -n +2)"
+}
+
+@test "BUMP: Chained changes from tagged patch release" {
+    # Create chain of changes and save their gitsha
+    git commit -m "Some patch release" --allow-empty
+    git tag -a v1.10.4 -m "Patch release v1.10.4"
+
+    git commit -m "Commit A" --allow-empty
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit B" --allow-empty
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit C" --allow-empty
+    # COMMIT_C=$(git rev-parse --short HEAD)
+    run wrench build
+    [ "$status" -eq 0 ]
+
+
+    VERSION=10
+    # Loop through all short sha listed from initial commit
+    while read -r line; do
+        # Increment to keep track of what should be current version
+        VERSION=$((VERSION+1))
+
+        # Checkout current change
+        git checkout $line
+
+        # Test bump
+        run wrench bump minor
+        echo "bump output=$output"
+        echo "bump status=$status"
+        [ "$status" -eq 0 ]
+        [ "$output" = "Released v1.$VERSION.0" ]
+
+        # verify tag exists origin
+        run bash -c "cd ../origin && git rev-list v1.$VERSION.0.."
+        echo "origin output=$output"
+        echo "origin status=$status"
+        [ "$status" -eq 0 ]
+
+        # verify image exists
+        run docker inspect example/simple:v1.$VERSION.0
+        echo "image output=$output"
+        echo "image status=$status"
+        [ "$status" -eq 0 ]
+
+    done <<< "$(git log --pretty=format:'%h' --reverse | tail -n +3)"
+}
+
+@test "BUMP: Chained changes from root commit with old history" {
+    # Create some old history
+    for i in `seq 1 7`; do
+        git commit -m "Commit $i" --allow-empty
+    done
+
+    # Create chain of changes and save their gitsha
+    git commit -m "Commit A" --allow-empty
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit B" --allow-empty
+    run wrench build
+    [ "$status" -eq 0 ]
+
+    git commit -m "Commit C" --allow-empty
+    # COMMIT_C=$(git rev-parse --short HEAD)
+    run wrench build
+    [ "$status" -eq 0 ]
+
+
+    VERSION=0
+    # Loop through our 3 changes and test bump
+    while read -r line; do
+        # Increment to keep track of what should be current version
+        VERSION=$((VERSION+1))
+
+        # Checkout current change
+        git checkout $line
+
+        # Test bump
+        run wrench bump minor
+        echo "bump output=$output"
+        echo "bump status=$status"
+        [ "$status" -eq 0 ]
+        [ "$output" = "Released v0.$VERSION.0" ]
+
+        # verify tag exists origin
+        run bash -c "cd ../origin && git rev-list v0.$VERSION.0.."
+        echo "origin output=$output"
+        echo "origin status=$status"
+        [ "$status" -eq 0 ]
+
+        # verify image exists
+        run docker inspect example/simple:v0.$VERSION.0
+        echo "image output=$output"
+        echo "image status=$status"
+        [ "$status" -eq 0 ]
+
+    done <<< "$(git log --pretty=format:'%h' --reverse | tail -n 3)"
 }

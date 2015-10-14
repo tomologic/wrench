@@ -89,6 +89,22 @@ Wrench will by default never rebuild an image if it already exists. Use rebuild 
 $ wrench build --rebuild
 ```
 
+### VERSION environment
+
+On build and bump wrench will add a VERSION environment to docker images. This could be utilized by the application to report it's version through an api.
+
+It should be noted that the extra slice created during bump will make the hash of the snapshot and release docker images hash be different.
+
+```
+$ cd examples/simple
+$ wrench build
+INFO: Found Dockerfile, building image example/simple:v1.0.0
+...
+Successfully built 5eb975a7956b
+$ wrench run echo-version
+1.0.0
+```
+
 ### Simple
 
 Simple mode will build an image named and tagged based on project config _(either automatically detected or provided through wrench.yml)_.
@@ -175,4 +191,59 @@ Run:
     Env:
       - FOO=BAR
       - HELLO=WORLD
+```
+
+## Bump
+
+Subcommand for bumping version of project. This is higly opiniated and will not work if following assumptions are not meet.
+
+- Fast-forward only _(no merge commits used in project)_
+- Snapshot image exist on host _(either already built and tested on host or pull)_
+- Git access to origin _(able to push git tag)_
+
+Example commands:
+
+```
+wrench bump major
+wrench bump minor
+wrench bump patch
+```
+
+Wrench will do following:
+
+1. Generate new release version _(major, minor or patch)_
+2. Git tag local git tree with new release version
+3. Retag docker snapshot image to release version
+4. Update VERSION env variable in release image
+5. Push git tag to origin
+
+On failure wrench will try to backtrack gracefully _(remove retagged docker image, local git tag)_.
+
+## Push
+
+Wrench provides a subcommand to simplify pushing of projects docker images to docker registries.
+
+Following blocks are equivalent:
+
+```
+# Prepare tags for pushing (force required for existing tags)
+docker tag example/foobar:$(git describe) registry.local:5000/example/foobar:$(git describe)
+docker tag -f example/foobar:$(git describe) registry.local:5000/example/foobar:latest
+docker tag -f example/foobar:$(git describe) registry.local:5000/example/foobar:prod
+
+# Push both tags
+docker push registry.local:5000/example/foobar:$(git describe)
+docker push registry.local:5000/example/foobar:latest
+docker push registry.local:5000/example/foobar:prod
+
+# Remove temporary tags
+docker rmi registry.local:5000/example/foobar:$(git describe)
+docker rmi registry.local:5000/example/foobar:latest
+docker rmi registry.local:5000/example/foobar:prod
+```
+
+Wrench will know which images to push based on project state _(release, snapshot image)_.
+
+```
+wrench push registry.local:5000 --additional-tags latest,prod
 ```
