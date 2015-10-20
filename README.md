@@ -12,9 +12,9 @@ What we want:
 
 Putting the logic in the app repos would create a lot of duplications, maintenance hell and big overhead when creating new services. Putting the logic in the pipelines will make local development difficult since all logic for building/testing/deploying exists in the CI systems. Logic for building/testing/deploying apps/services needs to be accessible for both developers and CI system.
 
-Golang was chosen for Wrench since we can have automatic cross-compiled binaries for Linux and OSX.
+Golang was chosen for Wrench since we can have automatic cross-compiled binaries for Linux and OSX. Get them on [releases page](https://github.com/tomologic/wrench/releases).
 
-Wrench is provided as [docker image](https://registry.hub.docker.com/u/tomologic/wrench/) and through our [homebrew tap](https://github.com/tomologic/homebrew-tap) for OSX users.
+Wrench is provided through our [homebrew tap](https://github.com/tomologic/homebrew-tap) for OSX and linux users.
 
 ```
 brew tap tomologic/homebrew-tap
