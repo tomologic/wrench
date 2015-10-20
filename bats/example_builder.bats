@@ -39,26 +39,36 @@ teardown () {
 }
 
 @test "EXAMPLE: build builder" {
-    ret=0
-    out=$(wrench build) || ret=$?
+    # Skip builder examples when docker version is not 1.7*
+    # Bug in docker cli version 1.8 and 1.9 that restrict users from
+    # sending docker context through stdin
+    # https://github.com/docker/docker/issues/15785
+    docker version | grep -q "Client version: 1.7" || skip
 
-    echo "out=$out"
-    echo "ret=$ret"
-    [ "$ret" -eq 0 ]
+    run wrench build
 
-    echo $out | grep "building.*example\/builder:v0\.1\.0"
+    echo "output=$output"
+    echo "status=$status"
+    [ "$status" -eq 0 ]
+
+    echo $output | grep "building.*example\/builder:v0\.1\.0"
 }
 
 @test "EXAMPLE: run syntax-tests builder" {
+    # Skip builder examples when docker version is not 1.7*
+    # Bug in docker cli version 1.8 and 1.9 that restrict users from
+    # sending docker context through stdin
+    # https://github.com/docker/docker/issues/15785
+    docker version | grep -q "Client version: 1.7" || skip
+
     # Build image so it already exists
     wrench build
 
-    ret=0
-    out=$(wrench run go-test) || ret=$?
+    run wrench run go-test
 
-    echo "out=$out"
-    echo "ret=$ret"
-    [ "$ret" -eq 0 ]
+    echo "output=$output"
+    echo "status=$status"
+    [ "$status" -eq 0 ]
 
-    echo $out | grep "PASS"
+    echo $output | grep "PASS"
 }
