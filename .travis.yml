@@ -24,6 +24,7 @@ before_script:
   sudo iptables -L DOCKER || sudo iptables -N DOCKER
 script: |
   go test ./... -v
+  go vet ./...
   bats ./bats
 before_deploy: |
   set +e
