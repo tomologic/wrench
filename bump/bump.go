@@ -192,7 +192,7 @@ func getImageName() (string, error) {
 func getGitSemverTags() ([]string, error) {
 	exitcode, out := utils.RunCmd("git tag -l 'v[0-9]*\\.[0-9]*\\.[0-9]*'")
 	if exitcode != 0 {
-		return nil, errors.New(fmt.Sprintf("%s: %s", exitcode, out))
+		return nil, errors.New(fmt.Sprintf("%d: %s", exitcode, out))
 	}
 
 	// Split lines into slice
@@ -207,7 +207,7 @@ func getGitSemverTags() ([]string, error) {
 func getRootCommits() ([]string, error) {
 	exitcode, out := utils.RunCmd("git rev-list --max-parents=0 HEAD")
 	if exitcode != 0 {
-		return nil, errors.New(fmt.Sprintf("%s: %s", exitcode, out))
+		return nil, errors.New(fmt.Sprintf("%d: %s", exitcode, out))
 	}
 
 	// Split lines into slice
