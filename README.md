@@ -21,6 +21,36 @@ brew tap tomologic/homebrew-tap
 brew install wrench
 ```
 
+## Build
+
+[Travis CI Gimme](https://github.com/travis-ci/gimme) is used to cross-compile wrench.
+
+```
+$ brew install gimme
+```
+
+```
+$ make build
+$ make build_darwin
+$ make build_linux
+```
+
+## Package
+
+[Effing Package Management - fpm](https://github.com/jordansissel/fpm) is used for packaging.
+
+```
+$ brew install gnu-tar
+$ brew install rpm
+$ gem install fpm
+```
+
+```
+$ make package
+$ make package_deb
+$ make package_rpm
+```
+
 ## Project config
 
 ### Print wrench config
