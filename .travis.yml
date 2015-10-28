@@ -19,6 +19,11 @@ install: |
   pushd bats_install
   sudo bash install.sh /usr/local
   popd
+
+  # Install utils for packaging
+  gem install fpm --no-ri --no-rdoc
+  sudo apt-get update -qq
+  sudo apt-get install -qq -y rpm
 before_script:
   # https://github.com/zuazo/kitchen-in-travis-native/issues/1#issuecomment-142455888
   sudo iptables -L DOCKER || sudo iptables -N DOCKER
@@ -44,11 +49,12 @@ before_deploy: |
 
   # Build
   make build
+  make package
 deploy:
   provider: releases
   api_key:
     secure: QA/8DQ3ClZgQEu4sAAai3BwdB3xecyXzs+vriKNPaSB7hn75UkEndLy4vP7891qxEYm5sfiqshObnCt3VGD1Z9F/ZNRFsPJatk4dw9zH0jMebiDZCBKHZ1jEgQZDN14CdkMhcGtTAEr85QwpTtk6Verfvxy9XYTUdPe59T9vfM9tERLvDYyDXA5ps4l0rCJYBtJ5H/oy7lVKgMj32kEqVrOQKBD+93NjhsM7KXMaH8HRXpCh1Zvd1N9H/k7k6Q+XFbDmw9rd5WFt3+46J41El+/NH95S144GT+WUopz7pdwu5DWH2d9Jsf8sfRjJFMXV37TenEmtAp9R8TGXiqLkzHcRDr9HQAH4gi+51srxpbfoPpyJSXuflWopPO48Jia3+Boh6g9K/3qyRkqAliYKPqazECrs2nhmNTh4/CCEWXbX50h7Z8hgEXrGrYtah1HHyvrSgjEBL9NsLNdFMtMkWdkas4xZL8oEO5to3doSgckKkNFR+jiwNBPZ+eLOGohURwNdl8xfrxV9jssqBehch4xAoEqgVbGwS5z7XoCI8Vcte8HpkyfRNEKdTn1KF1ZzfwSc6PbY3hHg+9Tj6N+kE4ETHMOhhAIk2lsYP26eaax6XpfPbfUpwTfQAE/J+mdnJVxPzhZ6N9O+4Xhdm6zWch6qR41kY4+Vf5+grX1GoPM=
-  file: wrench-*
+  file: ARTIFACTS/*
   file_glob: true
   skip_cleanup: true
   on:
