@@ -43,22 +43,7 @@ before_deploy: |
   }
 
   # Build
-  os_list="linux darwin"
-  arch="amd64"
-  export GIMME_ARCH="$arch"
-  for os in $os_list; do
-    export GIMME_OS="$os"
-
-    eval "$(gimme 1.4.2)"
-
-    filename="wrench-$(git describe)-${os}-${arch}"
-    go build -a -ldflags "-w -X github.com/tomologic/wrench/version.version '$(git describe)'" -o $filename && {
-      echo "$filename built."
-    } || {
-      echo "ERROR: $filename not built."
-    }
-  done
-  ls -l
+  make build
 deploy:
   provider: releases
   api_key:
