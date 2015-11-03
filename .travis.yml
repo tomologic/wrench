@@ -20,6 +20,7 @@ install:
   - brew install bats
 
   # Install utils for packaging
+  - brew install tomologic/tap/travis-ci-bumpminor-sh
   - gem install fpm --no-ri --no-rdoc
   - sudo apt-get update -qq
   - sudo apt-get install -qq -y rpm
@@ -34,20 +35,8 @@ script:
   - go vet ./...
   - bats ./bats
 before_deploy: |
-    set +e
-    git tag --contains HEAD | grep -q "v.*" && {
-      set -e
-      echo "HEAD is already tagged release."
-    } || {
-      set -e
-      # Bump new version
-      wget -O semver.sh https://gist.githubusercontent.com/loa/435da12af9494a112daf/raw/semver.sh
-      chmod u+x semver.sh
-      git config user.name "Travis CI"
-      git config user.email "notifications@travis-ci.org"
-      git tag -a v$(./semver.sh bump minor) -m "Version v$(./semver.sh bump minor)"
-      git push --quiet "https://${GH_TOKEN}@${GH_REF}" --tags > /dev/null 2>&1
-    }
+    # Bump version
+    travis-ci-bumpminor.sh
 
     # Build
     make build
