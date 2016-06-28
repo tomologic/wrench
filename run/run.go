@@ -71,13 +71,13 @@ func run(name string) {
 	dockerfile_content := "" +
 		fmt.Sprintf("FROM %s\n", image_name) +
 		"ADD wrench_run.sh /tmp/\n" +
-		"ENTRYPOINT [\"bash\"]\n" +
+		"ENTRYPOINT [\"/bin/sh\"]\n" +
 		"CMD [\"/tmp/wrench_run.sh\"]\n"
 
 	dockerfile := fmt.Sprintf("%s/Dockerfile", tempdir)
 	utils.WriteFileContent(dockerfile, dockerfile_content)
 
-	// Create wrench run bash file
+	// Create wrench run shell script
 	runfile := fmt.Sprintf("%s/wrench_run.sh", tempdir)
 	utils.WriteFileContent(runfile, run.Cmd)
 
