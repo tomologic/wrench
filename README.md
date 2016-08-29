@@ -2,6 +2,8 @@
 
 [![Travis](https://img.shields.io/travis/tomologic/wrench.svg?style=flat-square)](https://travis-ci.org/tomologic/wrench)
 
+Compatible Docker releases: 1.10.0 - 1.12.0
+
 ## What is this?
 
 This is our current try to create standards for building, testing and deploying our applications.
@@ -258,8 +260,8 @@ Following blocks are equivalent:
 ```
 # Prepare tags for pushing (force required for existing tags)
 docker tag example/foobar:$(git describe) registry.local:5000/example/foobar:$(git describe)
-docker tag -f example/foobar:$(git describe) registry.local:5000/example/foobar:latest
-docker tag -f example/foobar:$(git describe) registry.local:5000/example/foobar:prod
+docker tag example/foobar:$(git describe) registry.local:5000/example/foobar:latest
+docker tag example/foobar:$(git describe) registry.local:5000/example/foobar:prod
 
 # Push both tags
 docker push registry.local:5000/example/foobar:$(git describe)
