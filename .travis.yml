@@ -6,7 +6,7 @@ branches:
     only:
       - master
 go:
-  - '1.5'
+  - '1.7'
 env:
     global:
       - GH_REF: github.com/tomologic/wrench.git
