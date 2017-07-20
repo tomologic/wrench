@@ -25,12 +25,6 @@ brew install wrench
 
 ## Build
 
-[Travis CI Gimme](https://github.com/travis-ci/gimme) is used to cross-compile wrench.
-
-```
-$ brew install gimme
-```
-
 ```
 $ make build
 $ make build_darwin

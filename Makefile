@@ -1,4 +1,3 @@
-GO_VERSION = 1.8
 NAME = wrench
 BUILDDIR = ./ARTIFACTS
 
@@ -7,16 +6,12 @@ VERSION = $(shell git describe --tags --match 'v[0-9]*\.[0-9]*\.[0-9]*' | sed 's
 
 ###############################################################################
 ## Building
-##
-## Travis CI Gimme is used to cross-compile
-## https://github.com/travis-ci/gimme
 ###############################################################################
 
 .PHONY: build build_darwin build_linux
 build: build_darwin build_linux
 
-compile = bash -c "eval \"$$(GIMME_GO_VERSION=$(GO_VERSION) GIMME_OS=$(1) GIMME_ARCH=$(2) gimme)\"; \
-					go build -a \
+compile = bash -c "env GOOS=$(1) GOARCH=$(2) go build -a \
 						-ldflags \"-w -X main.VERSION='$(VERSION)'\" \
 						-o $(BUILDDIR)/$(NAME)-$(VERSION)-$(1)-$(2)"
 
