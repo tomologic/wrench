@@ -1,7 +1,8 @@
-package build
+package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -13,7 +14,7 @@ import (
 
 var flag_rebuild bool
 
-func AddToWrench(rootCmd *cobra.Command) {
+func AddBuildToWrench(rootCmd *cobra.Command) {
 	var cmdBuild = &cobra.Command{
 		Use:   "build",
 		Short: "Build docker image",
@@ -150,17 +151,33 @@ func buildTest() {
 		dockerfile_lines[0] = fmt.Sprintf("FROM %s", image_name)
 	}
 
-	dockerfile = strings.Join(dockerfile_lines, "\n")
+	temp_dockerfile_content := strings.Join(dockerfile_lines, "\n")
 
-	utils.WriteFileContent("./Dockerfile.test", dockerfile)
+	// Tempdir for building test image
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("ERROR: %s\n", err)
+		os.Exit(1)
+	}
 
-	cmd_string := fmt.Sprintf("docker build -f Dockerfile.test -t '%s' .", test_image_name)
+	tempdir, err := ioutil.TempDir(dir, ".wrench_build_")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempdir)
+
+	temp_dockerfile := fmt.Sprintf("%s/Dockerfile.test", tempdir)
+	utils.WriteFileContent(temp_dockerfile, temp_dockerfile_content)
+
+	cmd_string := fmt.Sprintf("docker build -f %s -t '%s' .", temp_dockerfile, test_image_name)
 	cmd := exec.Command("sh", "-c", cmd_string)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if err != nil {
+		os.RemoveAll(tempdir)
 		fmt.Println(err)
 		os.Exit(1)
 	}

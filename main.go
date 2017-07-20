@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tomologic/wrench/build"
 	"github.com/tomologic/wrench/bump"
 	"github.com/tomologic/wrench/config"
 	"github.com/tomologic/wrench/push"
@@ -17,7 +16,7 @@ var VERSION = "0.0.0"
 func main() {
 	var rootCmd = &cobra.Command{Use: "wrench"}
 
-	build.AddToWrench(rootCmd)
+	AddBuildToWrench(rootCmd)
 	bump.AddToWrench(rootCmd)
 	push.AddToWrench(rootCmd)
 	config.AddToWrench(rootCmd)

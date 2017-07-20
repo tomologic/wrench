@@ -2,7 +2,7 @@
 
 [![Travis](https://img.shields.io/travis/tomologic/wrench.svg?style=flat-square)](https://travis-ci.org/tomologic/wrench)
 
-Compatible Docker releases: 1.10.0 - 1.12.0
+Compatible Docker releases: 1.10.0 - 17.06
 
 ## What is this?
 
