@@ -23,6 +23,27 @@ brew tap tomologic/homebrew-tap
 brew install wrench
 ```
 
+### Bash completion
+If installing via Homebrew, bash completion will be available as soon as the bash-completion package is installed.
+
+```
+brew install bash-completion
+```
+
+It will ask you to add following lines to your ~/.bash_profile
+
+```
+if [ -f $(brew --prefix)/etc/bash_completion ]; then
+  . $(brew --prefix)/etc/bash_completion
+fi
+```
+
+On Linux, you can install completions like this:
+
+```
+wget https://raw.githubusercontent.com/tomologic/wrench/master/contrib/wrench-completion.bash && sudo mv wrench-completion.bash /etc/bash_completion.d/
+```
+
 ## Build
 
 ```
