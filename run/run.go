@@ -107,15 +107,26 @@ func run(name string) {
 	defer utils.DockerRemoveImage(run_image_name)
 	defer os.RemoveAll(tempdir)
 
+	// Start building docker run command
+	cmd_string_prefix := "docker run -t --rm "
+
 	if len(run.Env) > 0 {
+		// Configured environment variables are passed as an env-file to docker
 		envfile := fmt.Sprintf("./%s-env", tempdir_base)
 		utils.WriteFileContent(envfile, strings.Join(run.Env, "\n"))
 		defer os.Remove(envfile)
 
-		cmd_string = fmt.Sprintf("docker run -t --rm --env-file '%s' '%s'", envfile, run_image_name)
-	} else {
-		cmd_string = fmt.Sprintf("docker run -t --rm '%s'", run_image_name)
+		cmd_string_prefix += fmt.Sprintf("--env-file '%s' ", envfile)
 	}
+
+	if len(run.Volumes) > 0 {
+		// For each volume add a -v flag to docker run command
+		for _, volume := range run.Volumes {
+			cmd_string_prefix += fmt.Sprintf("-v '%s' ", volume)
+		}
+	}
+	// Append image name to make a complete command
+	cmd_string = cmd_string_prefix + fmt.Sprintf("'%s'", run_image_name)
 
 	// Run
 	cmd = exec.Command("sh", "-c", cmd_string)

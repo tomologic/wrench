@@ -23,8 +23,9 @@ type Project struct {
 	Image        string `yaml:"Image"`
 }
 type Run struct {
-	Cmd string   `yaml:"Cmd"`
-	Env []string `yaml:"Env,omitempty"`
+	Cmd     string   `yaml:"Cmd"`
+	Env     []string `yaml:"Env,omitempty"`
+	Volumes []string `yaml:"Volume,omitempty"`
 }
 type Config struct {
 	Project Project        `yaml:"Project"`
@@ -157,30 +158,40 @@ var unmarshallConfigRun = func(item yaml.MapItem) (string, Run, error) {
 		// Expanded structure
 		// foobar:
 		//   Cmd: run command
-		//   Env: ...
+		//   Env:
+		//     - ENVVAR=value
+		//   Volumes:
+		//     - /localdir:/containerdir
 		run_expanded, ok := item.Value.(yaml.MapSlice)
 		if !ok {
 			return name, run, errors.New(fmt.Sprintf("Unable to parse run item as map for %s", name))
 		}
 
 		for k := range run_expanded {
-			if run_expanded[k].Key.(string) == "Cmd" {
+			key := run_expanded[k].Key.(string)
+			if key == "Cmd" {
+				// Expecting a command string
 				cmd_string, ok = run_expanded[k].Value.(string)
 				if !ok {
 					return name, run, errors.New(fmt.Sprintf("Unable to parse Cmd item as string for run item %s", name))
 				}
 				run.Cmd = strings.TrimSpace(cmd_string)
-			} else if run_expanded[k].Key.(string) == "Env" {
-				env_list, ok := run_expanded[k].Value.([]interface{})
+			} else if key == "Env" || key == "Volumes" {
+				// Expecting a list of items
+				item_list, ok := run_expanded[k].Value.([]interface{})
 				if !ok {
-					return name, run, errors.New(fmt.Sprintf("Unable to parse Env as list for run item %s", name))
+					return name, run, errors.New(fmt.Sprintf("Unable to parse %s as list for run item %s", key, name))
 				}
-				for _, s := range env_list {
+				for _, s := range item_list {
 					t, ok := s.(string)
 					if ok {
-						run.Env = append(run.Env, t)
+						if key == "Env" {
+							run.Env = append(run.Env, t)
+						} else if key == "Volumes" {
+							run.Volumes = append(run.Volumes, t)
+						}
 					} else {
-						return name, run, errors.New(fmt.Sprintf("Unable to parse Env item as string for run item %s", name))
+						return name, run, errors.New(fmt.Sprintf("Unable to parse %s item as string for run item %s", key, name))
 					}
 				}
 			}

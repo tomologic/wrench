@@ -219,9 +219,9 @@ directory .
 checking ./server.py
 ```
 
-### Environment variables
+### Environment variables and volume mounts
 
-Environmental variables can be provided for run commands through the _wrench.yml_ file.
+Environmental variables and volume mounts can be provided for run commands through the _wrench.yml_ file.
 
 ```
 Project:
@@ -238,6 +238,8 @@ Run:
     Env:
       - FOO=BAR
       - HELLO=WORLD
+    Volumes:
+      - /absolute/local/path:/container/path
 ```
 
 ## Bump
