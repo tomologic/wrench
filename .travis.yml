@@ -3,14 +3,14 @@ services:
   - docker
 language: go
 branches:
-    only:
-      - master
+  only:
+    - master
 go:
-  - '1.8'
+  - '1.10'
 env:
-    global:
-      - GH_REF: github.com/tomologic/wrench.git
-      - secure: yf4+rAwjxn4g4i/CgvuVUgtZPSIA9fJBN1r6VXDYBVteoJO+/iaKj5/NYITSLDVRZjT7O3SOBHkqEFa78AXyWQo49tAhUpCYvsKvXOVYDvpgRM1wYQBnV+TssaGRTiTLw+GizeKqrWsYafd/7SYRJ1+UVw90QPfQxOB/M0G0vVW9TLFGP03CptFcMf0S7P/R/w4oORuZuCNKnvdYOU3jW78n/ZNgE3s6rhqa2MAb6upH1AisVQQyTXrK1Ue+po2QxvFNvSJiiO3gtn8WlsK8OqHxUep1B+ttjecQ+frgkmBgE3Z4KvBA6O+bTG6m9qIEqpXoJNaf0MojPs2XFERz1JAF1243oYUF9YXcxDvoR4QeIn4p5ICVHSQRLa+1HtXBFH1BuEvgwHeUa1q+BRzdyfsILByRdFhTPerf2AwR174jNMhmlApGgt9wQD7wdu5BMuzPyDCoWUQGWiVg3k0lVqLcd7dwrbazLR+llcef+OAdZlD+8Ao0NPQqGkixhlLS0zrzJLMR5rHFV6EuCvw9Dy2AHoI8y4Azurqr6oqCTBOihiYoot6OQ2gcGnZE5OrDhtFqW+9dkSOgbYIblG6SssR7+XSRgjoVQfyDVI+xg52F4A2575iiYtHjXMWonGx+N1IPfudYmViTS0GDgKozAxLcvbYDgFm5BmGocSLpK64=
+  global:
+    - GH_REF: github.com/tomologic/wrench.git
+    - secure: yf4+rAwjxn4g4i/CgvuVUgtZPSIA9fJBN1r6VXDYBVteoJO+/iaKj5/NYITSLDVRZjT7O3SOBHkqEFa78AXyWQo49tAhUpCYvsKvXOVYDvpgRM1wYQBnV+TssaGRTiTLw+GizeKqrWsYafd/7SYRJ1+UVw90QPfQxOB/M0G0vVW9TLFGP03CptFcMf0S7P/R/w4oORuZuCNKnvdYOU3jW78n/ZNgE3s6rhqa2MAb6upH1AisVQQyTXrK1Ue+po2QxvFNvSJiiO3gtn8WlsK8OqHxUep1B+ttjecQ+frgkmBgE3Z4KvBA6O+bTG6m9qIEqpXoJNaf0MojPs2XFERz1JAF1243oYUF9YXcxDvoR4QeIn4p5ICVHSQRLa+1HtXBFH1BuEvgwHeUa1q+BRzdyfsILByRdFhTPerf2AwR174jNMhmlApGgt9wQD7wdu5BMuzPyDCoWUQGWiVg3k0lVqLcd7dwrbazLR+llcef+OAdZlD+8Ao0NPQqGkixhlLS0zrzJLMR5rHFV6EuCvw9Dy2AHoI8y4Azurqr6oqCTBOihiYoot6OQ2gcGnZE5OrDhtFqW+9dkSOgbYIblG6SssR7+XSRgjoVQfyDVI+xg52F4A2575iiYtHjXMWonGx+N1IPfudYmViTS0GDgKozAxLcvbYDgFm5BmGocSLpK64=
 install:
   # Install linuxbrew
   - git clone https://github.com/Homebrew/linuxbrew.git ~/.linuxbrew
@@ -42,11 +42,11 @@ before_deploy: |
     make build
     make package
 deploy:
-    provider: releases
-    api_key:
-        secure: 5V1n73yQzy3xZNumgB8+qwjX5aBXtY7i27YHzCp5YN48LR/4DbsYdhIjCZbVbXnEyIo4tRw8rQmjY2YMKVab3xzm8A7XPmRiF1gDD4xGRCv7RN54oZQn5mOneO5tHqM8HckbZlQwhPHS0KxaXjnyKxj1owSExKWIYwJN4P3AQLu/4ioyMSBJY15nZPdCOj2oTpMOfOzl3p0eo1jaep4+kb4/FXeoVSJJ7B8X1CDlk27pjqVU0dWZHBSxOz9tdCXrbK01tPIGtj9LB3QyOjtEWV1f3yOhqIM5Q1MCrVxFvJo4SbmIM5NJaORwIiv7KYX45w0z8Nw/y4CNW+b5at8huBvjt+IeN16IdtElUzYP4D2tePzL5NCm1OdFASUEtjsptegb4DmX+bbPTpII1rBy47L8dyyT1NaQy/5S3bBfx6tRGgPsto/GNocs3DYUmBrmLRAC4D/Z9ZvJ+Tz59LPCXAMj1DW9G3u01V6AU5VxlxgtbrowlmuAahvemRHL/u49UPqnme/XCSBc87NXNwvDm9YcCLW5B1oH1dUvXJ0hBRHq4eSkHgXO21XiFGFh4jGSlojSJ4KCyy5ZreoomJ9iMAGJwtT38dkxi7D6aswDsk80xgDe4wWcxm/pgm+VH8GGNmefYWSPZPSPQn/og38yEt/kOzhqDKBJkmWS/xoQwgE=
-    file: ARTIFACTS/*
-    file_glob: true
-    skip_cleanup: true
-    on:
-        repo: tomologic/wrench
+  provider: releases
+  api_key:
+    secure: 5V1n73yQzy3xZNumgB8+qwjX5aBXtY7i27YHzCp5YN48LR/4DbsYdhIjCZbVbXnEyIo4tRw8rQmjY2YMKVab3xzm8A7XPmRiF1gDD4xGRCv7RN54oZQn5mOneO5tHqM8HckbZlQwhPHS0KxaXjnyKxj1owSExKWIYwJN4P3AQLu/4ioyMSBJY15nZPdCOj2oTpMOfOzl3p0eo1jaep4+kb4/FXeoVSJJ7B8X1CDlk27pjqVU0dWZHBSxOz9tdCXrbK01tPIGtj9LB3QyOjtEWV1f3yOhqIM5Q1MCrVxFvJo4SbmIM5NJaORwIiv7KYX45w0z8Nw/y4CNW+b5at8huBvjt+IeN16IdtElUzYP4D2tePzL5NCm1OdFASUEtjsptegb4DmX+bbPTpII1rBy47L8dyyT1NaQy/5S3bBfx6tRGgPsto/GNocs3DYUmBrmLRAC4D/Z9ZvJ+Tz59LPCXAMj1DW9G3u01V6AU5VxlxgtbrowlmuAahvemRHL/u49UPqnme/XCSBc87NXNwvDm9YcCLW5B1oH1dUvXJ0hBRHq4eSkHgXO21XiFGFh4jGSlojSJ4KCyy5ZreoomJ9iMAGJwtT38dkxi7D6aswDsk80xgDe4wWcxm/pgm+VH8GGNmefYWSPZPSPQn/og38yEt/kOzhqDKBJkmWS/xoQwgE=
+  file: ARTIFACTS/*
+  file_glob: true
+  skip_cleanup: true
+  on:
+    repo: tomologic/wrench
