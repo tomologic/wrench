@@ -1,10 +1,13 @@
+"""Example flask app."""
 from flask import Flask
-app = Flask(__name__)
+APP = Flask(__name__)
 
 
-@app.route("/")
+@APP.route("/")
 def hello():
+    """Returns text."""
     return "Hello World!"
 
+
 if __name__ == "__main__":
-    app.run()
+    APP.run()
