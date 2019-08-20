@@ -23,3 +23,6 @@ wrench
 
 # Editors
 .*.swp
+
+# Build artifacts
+ARTIFACTS
