@@ -6,24 +6,20 @@ branches:
   only:
     - master
 go:
-  - '1.10'
+  - '1.11'
 env:
   global:
     - GH_REF: github.com/tomologic/wrench.git
     - secure: yf4+rAwjxn4g4i/CgvuVUgtZPSIA9fJBN1r6VXDYBVteoJO+/iaKj5/NYITSLDVRZjT7O3SOBHkqEFa78AXyWQo49tAhUpCYvsKvXOVYDvpgRM1wYQBnV+TssaGRTiTLw+GizeKqrWsYafd/7SYRJ1+UVw90QPfQxOB/M0G0vVW9TLFGP03CptFcMf0S7P/R/w4oORuZuCNKnvdYOU3jW78n/ZNgE3s6rhqa2MAb6upH1AisVQQyTXrK1Ue+po2QxvFNvSJiiO3gtn8WlsK8OqHxUep1B+ttjecQ+frgkmBgE3Z4KvBA6O+bTG6m9qIEqpXoJNaf0MojPs2XFERz1JAF1243oYUF9YXcxDvoR4QeIn4p5ICVHSQRLa+1HtXBFH1BuEvgwHeUa1q+BRzdyfsILByRdFhTPerf2AwR174jNMhmlApGgt9wQD7wdu5BMuzPyDCoWUQGWiVg3k0lVqLcd7dwrbazLR+llcef+OAdZlD+8Ao0NPQqGkixhlLS0zrzJLMR5rHFV6EuCvw9Dy2AHoI8y4Azurqr6oqCTBOihiYoot6OQ2gcGnZE5OrDhtFqW+9dkSOgbYIblG6SssR7+XSRgjoVQfyDVI+xg52F4A2575iiYtHjXMWonGx+N1IPfudYmViTS0GDgKozAxLcvbYDgFm5BmGocSLpK64=
 install:
-  # Install linuxbrew
-  - git clone https://github.com/Homebrew/linuxbrew.git ~/.linuxbrew
-  - export PATH="$HOME/.linuxbrew/bin:$PATH"
-
-  # Install bats for testing
-  - brew install bats
-
-  # Install utils for packaging
-  - brew install tomologic/tap/travis-ci-bumpminor-sh
-  - gem install fpm --no-ri --no-rdoc
+  - sudo add-apt-repository ppa:duggan/bats --yes
   - sudo apt-get update -qq
-  - sudo apt-get install -qq -y rpm
+  # bats for testing, rpm and fpm for packaging
+  - sudo apt-get install -qq bats rpm
+  - gem install fpm --no-ri --no-rdoc
+
+  # Script to bump version
+  - wget https://raw.githubusercontent.com/tomologic/utilities/master/travis-ci-bumpminor.sh
 
   # Get golang dependencies
   - go get -t ./...
@@ -36,7 +32,7 @@ script:
   - bats ./bats
 before_deploy: |
     # Bump version
-    travis-ci-bumpminor.sh
+    sh travis-ci-bumpminor.sh
 
     # Build
     make build
