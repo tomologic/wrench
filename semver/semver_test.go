@@ -21,14 +21,14 @@ func (suite *SemverTestSuite) TestSemverPartEmpty() {
 		Input string
 		Error string
 	}{
-		{"..", "Part 1 empty"},
-		{".0.1", "Part 1 empty"},
-		{"1..1", "Part 2 empty"},
-		{"1.2.", "Part 3 empty"},
-		{"v..", "Part 1 empty"},
-		{"v.0.1", "Part 1 empty"},
-		{"v1..1", "Part 2 empty"},
-		{"v1.2.", "Part 3 empty"},
+		{"..", "part 1 empty"},
+		{".0.1", "part 1 empty"},
+		{"1..1", "part 2 empty"},
+		{"1.2.", "part 3 empty"},
+		{"v..", "part 1 empty"},
+		{"v.0.1", "part 1 empty"},
+		{"v1..1", "part 2 empty"},
+		{"v1.2.", "part 3 empty"},
 	}
 
 	for _, ex := range examples {
@@ -51,7 +51,7 @@ func (suite *SemverTestSuite) TestSemverRequire3Parts() {
 		_, err := Parse(ex)
 
 		if assert.NotNil(suite.T(), err) {
-			assert.Equal(suite.T(), "Semver requires 3 parts Major.Minor.Patch[-snapshot]", err.Error())
+			assert.Equal(suite.T(), "semver requires 3 parts Major.Minor.Patch[-snapshot]", err.Error())
 		}
 	}
 }
@@ -84,12 +84,12 @@ func (suite *SemverTestSuite) TestSemverBumpUnknownLevel() {
 	err := sv.Bump("")
 
 	assert.NotNil(suite.T(), err)
-	assert.Equal(suite.T(), "Unknown level ''", err.Error())
+	assert.Equal(suite.T(), "unknown level ''", err.Error())
 
 	err = sv.Bump("aoeu")
 
 	assert.NotNil(suite.T(), err)
-	assert.Equal(suite.T(), "Unknown level 'aoeu'", err.Error())
+	assert.Equal(suite.T(), "unknown level 'aoeu'", err.Error())
 }
 
 func (suite *SemverTestSuite) TestSemverBump() {
@@ -207,34 +207,34 @@ func (suite *SemverTestSuite) TestSemverIsReleaseVersion() {
 
 func (suite *SemverTestSuite) TestSemverSort() {
 	var unsorted = []Semver{
-		Semver{3, 3, 3, ""},
-		Semver{0, 3, 0, ""},
-		Semver{1, 1, 0, ""},
-		Semver{0, 1, 0, ""},
-		Semver{0, 2, 0, ""},
-		Semver{0, 0, 0, ""},
-		Semver{3, 3, 0, ""},
-		Semver{2, 2, 0, ""},
-		Semver{3, 3, 1, ""},
-		Semver{3, 3, 2, ""},
+		{3, 3, 3, ""},
+		{0, 3, 0, ""},
+		{1, 1, 0, ""},
+		{0, 1, 0, ""},
+		{0, 2, 0, ""},
+		{0, 0, 0, ""},
+		{3, 3, 0, ""},
+		{2, 2, 0, ""},
+		{3, 3, 1, ""},
+		{3, 3, 2, ""},
 	}
 
 	var sorted = []Semver{
-		Semver{0, 0, 0, ""},
-		Semver{0, 1, 0, ""},
-		Semver{0, 2, 0, ""},
-		Semver{0, 3, 0, ""},
-		Semver{1, 1, 0, ""},
-		Semver{2, 2, 0, ""},
-		Semver{3, 3, 0, ""},
-		Semver{3, 3, 1, ""},
-		Semver{3, 3, 2, ""},
-		Semver{3, 3, 3, ""},
+		{0, 0, 0, ""},
+		{0, 1, 0, ""},
+		{0, 2, 0, ""},
+		{0, 3, 0, ""},
+		{1, 1, 0, ""},
+		{2, 2, 0, ""},
+		{3, 3, 0, ""},
+		{3, 3, 1, ""},
+		{3, 3, 2, ""},
+		{3, 3, 3, ""},
 	}
 
 	sort.Sort(SemverList(unsorted))
 
-	for index, _ := range sorted {
+	for index := range sorted {
 		assert.Equal(suite.T(), sorted[index], unsorted[index])
 	}
 }
