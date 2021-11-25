@@ -11,6 +11,7 @@ import (
 	"github.com/tomologic/wrench/run"
 )
 
+// VERSION to return in "wrench version" command
 var VERSION = "0.0.0"
 
 func main() {

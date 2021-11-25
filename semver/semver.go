@@ -27,30 +27,30 @@ func Parse(s string) (Semver, error) {
 
 	// 3 parts should be found
 	if len(parts) != 3 {
-		return sv, errors.New("Semver requires 3 parts Major.Minor.Patch[-snapshot]")
+		return sv, errors.New("semver requires 3 parts Major.Minor.Patch[-snapshot]")
 	}
 
 	// Make sure no part empty
 	for i, p := range parts {
 		if strings.TrimSpace(p) == "" {
-			return sv, errors.New(fmt.Sprintf("Part %d empty", i+1))
+			return sv, fmt.Errorf("part %d empty", i+1)
 		}
 	}
 
 	var err error
 	if sv.Major, err = strconv.Atoi(parts[0]); err != nil {
-		return sv, errors.New(fmt.Sprintf("Unable to convert major '%s' to int", parts[0]))
+		return sv, fmt.Errorf("unable to convert major '%s' to int", parts[0])
 	}
 
 	if sv.Minor, err = strconv.Atoi(parts[1]); err != nil {
-		return sv, errors.New(fmt.Sprintf("Unable to convert minor '%s' to int", parts[1]))
+		return sv, fmt.Errorf("unable to convert minor '%s' to int", parts[1])
 	}
 
 	// Split Patch and Snapshot
 	parts = strings.SplitN(parts[2], "-", 2)
 
 	if sv.Patch, err = strconv.Atoi(parts[0]); err != nil {
-		return sv, errors.New(fmt.Sprintf("Unable to convert patch '%s' to int", parts[0]))
+		return sv, fmt.Errorf("unable to convert patch '%s' to int", parts[0])
 	}
 
 	if len(parts) == 2 {
@@ -79,7 +79,7 @@ func (s *Semver) Bump(level string) error {
 	} else if level == "patch" {
 		s.Patch += 1
 	} else {
-		return errors.New(fmt.Sprintf("Unknown level '%s'", level))
+		return fmt.Errorf("unknown level '%s'", level)
 	}
 	s.Snapshot = ""
 	return nil
@@ -94,10 +94,7 @@ func (s Semver) String() string {
 }
 
 func (s Semver) IsReleaseVersion() bool {
-	if s.Snapshot == "" {
-		return true
-	}
-	return false
+	return s.Snapshot == ""
 }
 
 func (s SemverList) Len() int {

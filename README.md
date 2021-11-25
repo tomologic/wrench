@@ -1,9 +1,5 @@
 # Wrench
 
-[![Travis](https://img.shields.io/travis/tomologic/wrench.svg?style=flat-square)](https://travis-ci.org/tomologic/wrench)
-
-Compatible Docker releases: 1.10.0 - 17.06
-
 ## What is this?
 
 This is our current try to create standards for building, testing and deploying our applications.
@@ -54,18 +50,18 @@ $ make build_linux
 
 ## Package
 
-[Effing Package Management - fpm](https://github.com/jordansissel/fpm) is used for packaging.
+[GoReleaser](https://goreleaser.com/intro/) is used to build and package this
+application.
 
 ```
-$ brew install gnu-tar
-$ brew install rpm
-$ gem install fpm
-```
+# Install
+brew install goreleaser/tap/goreleaser
 
-```
-$ make package
-$ make package_deb
-$ make package_rpm
+# Local-only release
+goreleaser release --snapshot --rm-dist
+
+# Build for local testing
+goreleaser build --single-target
 ```
 
 ## Project config
