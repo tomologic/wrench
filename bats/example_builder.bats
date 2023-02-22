@@ -39,12 +39,6 @@ teardown () {
 }
 
 @test "EXAMPLE: build builder" {
-    # Skip builder examples when docker version is not 1.7*
-    # Bug in docker cli version 1.8 and 1.9 that restrict users from
-    # sending docker context through stdin
-    # https://github.com/docker/docker/issues/15785
-    docker version | grep -q "Client version: 1.7" || skip
-
     run wrench build
 
     echo "output=$output"
@@ -55,12 +49,6 @@ teardown () {
 }
 
 @test "EXAMPLE: run syntax-tests builder" {
-    # Skip builder examples when docker version is not 1.7*
-    # Bug in docker cli version 1.8 and 1.9 that restrict users from
-    # sending docker context through stdin
-    # https://github.com/docker/docker/issues/15785
-    docker version | grep -q "Client version: 1.7" || skip
-
     # Build image so it already exists
     wrench build
 
