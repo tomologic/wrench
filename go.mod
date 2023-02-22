@@ -1,6 +1,6 @@
 module github.com/tomologic/wrench
 
-go 1.19
+go 1.20
 
 require (
 	github.com/fsouza/go-dockerclient v1.7.4

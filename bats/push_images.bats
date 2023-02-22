@@ -43,6 +43,8 @@ EOF
 
     # Start a docker registry
     REGISTRY_ID=$(docker run -P -d registry:2)
+    # Give it time to spin up
+    sleep 5
 
     # Get port for registry
     REGISTRY_PORT=$(docker inspect \

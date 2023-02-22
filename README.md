@@ -58,7 +58,7 @@ application.
 brew install goreleaser/tap/goreleaser
 
 # Local-only release
-goreleaser release --snapshot --rm-dist
+goreleaser release --snapshot --clean
 
 # Build for local testing
 goreleaser build --single-target
