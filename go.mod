@@ -3,7 +3,7 @@ module github.com/tomologic/wrench
 go 1.20
 
 require (
-	github.com/fsouza/go-dockerclient v1.9.4
+	github.com/fsouza/go-dockerclient v1.9.5
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -12,9 +12,9 @@ require (
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
-	github.com/containerd/containerd v1.6.14 // indirect
+	github.com/containerd/containerd v1.6.18 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/docker v23.0.0+incompatible // indirect
+	github.com/docker/docker v23.0.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -34,7 +34,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
