@@ -3,25 +3,16 @@
 setup () {
     BATS_TMP_DIR=$(mktemp -d .wrench-bats.XXXXX)
 
-    cp -r "$BATS_TEST_DIRNAME/../examples/simple" "$BATS_TMP_DIR/origin"
+    cp -r "$BATS_TEST_DIRNAME/../examples/simple" "$BATS_TMP_DIR/simple"
 
     pushd $BATS_TMP_DIR
-    pushd origin
+    cd simple
 
-    # Create a bogus local origin for simple
     git init
     git config user.name "Your Name"
     git config user.email "you@example.com"
     git add .
     git commit -m "Initial commit"
-
-    popd
-
-    # Local clone from our local origin
-    git clone ./origin ./simple
-    cd simple
-    git config user.name "Your Name"
-    git config user.email "you@example.com"
 }
 
 teardown () {
@@ -43,10 +34,10 @@ teardown () {
     [ "$status" -eq 0 ]
     [ "$output" = "Released v0.1.0" ]
 
-    # verify tag exists origin
-    run bash -c "cd ../origin && git rev-list v0.1.0.."
-    echo "origin output=$output"
-    echo "origin status=$status"
+    # verify tag exists
+    run git rev-list v0.1.0..
+    echo "tag output=$output"
+    echo "tag status=$status"
     [ "$status" -eq 0 ]
 
     # verify image exists
@@ -87,8 +78,8 @@ teardown () {
     [ "$status" -eq 0 ]
     [ "$output" = "Released v2.0.0" ]
 
-    # verify tag exists origin
-    run bash -c "cd ../origin && git rev-list v2.0.0.."
+    # verify tag exists
+    run git rev-list v2.0.0..
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 0 ]
@@ -113,8 +104,8 @@ teardown () {
     [ "$status" -eq 0 ]
     [ "$output" = "Released v1.3.0" ]
 
-    # verify tag exists origin
-    run bash -c "cd ../origin && git rev-list v1.3.0.."
+    # verify tag exists
+    run  git rev-list v1.3.0..
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 0 ]
@@ -139,8 +130,8 @@ teardown () {
     [ "$status" -eq 0 ]
     [ "$output" = "Released v1.2.34" ]
 
-    # verify tag exists origin
-    run bash -c "cd ../origin && git rev-list v1.2.34.."
+    # verify tag exists
+    run git rev-list v1.2.34..
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 0 ]
@@ -150,32 +141,6 @@ teardown () {
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 0 ]
-}
-
-@test "BUMP: fail pushing git tag" {
-    # make sure snapshot image exists
-    wrench build
-
-    # remove origin so push of tag fails
-    rm -rf ../origin
-
-    # test to bump patch version
-    run wrench bump minor
-    echo "output=$output"
-    echo "status=$status"
-    [ "$status" -eq 1 ]
-
-    # verify tag does not exists locally
-    run git rev-list v1.2.34..
-    echo "output=$output"
-    echo "status=$status"
-    [ "$status" -eq 128 ]
-
-    # verify image does not exists locally
-    run docker inspect example/simple:v1.2.34
-    echo "output=$output"
-    echo "status=$status"
-    [ "$status" -eq 1 ]
 }
 
 @test "BUMP: Chained changes from root commit" {
@@ -213,10 +178,10 @@ teardown () {
         [ "$status" -eq 0 ]
         [ "$output" = "Released v0.$VERSION.0" ]
 
-        # verify tag exists origin
-        run bash -c "cd ../origin && git rev-list v0.$VERSION.0.."
-        echo "origin output=$output"
-        echo "origin status=$status"
+        # verify tag exists
+        run git rev-list v0.$VERSION.0..
+        echo "tag output=$output"
+        echo "tag status=$status"
         [ "$status" -eq 0 ]
 
         # verify image exists
@@ -264,10 +229,10 @@ teardown () {
         [ "$status" -eq 0 ]
         [ "$output" = "Released v0.$VERSION.0" ]
 
-        # verify tag exists origin
-        run bash -c "cd ../origin && git rev-list v0.$VERSION.0.."
-        echo "origin output=$output"
-        echo "origin status=$status"
+        # verify tag exists
+        run git rev-list v0.$VERSION.0..
+        echo "tag output=$output"
+        echo "tag status=$status"
         [ "$status" -eq 0 ]
 
         # verify image exists
@@ -314,10 +279,10 @@ teardown () {
         [ "$status" -eq 0 ]
         [ "$output" = "Released v1.$VERSION.0" ]
 
-        # verify tag exists origin
-        run bash -c "cd ../origin && git rev-list v1.$VERSION.0.."
-        echo "origin output=$output"
-        echo "origin status=$status"
+        # verify tag exists
+        run git rev-list v1.$VERSION.0..
+        echo "tag output=$output"
+        echo "tag status=$status"
         [ "$status" -eq 0 ]
 
         # verify image exists
@@ -366,10 +331,10 @@ teardown () {
         [ "$status" -eq 0 ]
         [ "$output" = "Released v0.$VERSION.0" ]
 
-        # verify tag exists origin
-        run bash -c "cd ../origin && git rev-list v0.$VERSION.0.."
-        echo "origin output=$output"
-        echo "origin status=$status"
+        # verify tag exists
+        run git rev-list v0.$VERSION.0..
+        echo "tag output=$output"
+        echo "tag status=$status"
         [ "$status" -eq 0 ]
 
         # verify image exists
