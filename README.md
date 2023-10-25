@@ -242,7 +242,7 @@ Subcommand for bumping version of project. This is higly opiniated and will not 
 
 - Fast-forward only _(no merge commits used in project)_
 - Snapshot image exist on host _(either already built and tested on host or pull)_
-- Git access to origin _(able to push git tag)_
+- Local git repository _(able to read and create git tag)_
 
 Example commands:
 
@@ -258,9 +258,6 @@ Wrench will do following:
 2. Git tag local git tree with new release version
 3. Retag docker snapshot image to release version
 4. Update VERSION env variable in release image
-5. Push git tag to origin
-
-On failure wrench will try to backtrack gracefully _(remove retagged docker image, local git tag)_.
 
 ## Push
 

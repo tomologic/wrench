@@ -85,21 +85,6 @@ func bump(level string) error {
 		return errors.New("Failed updating VERSION env")
 	}
 
-	if exitcode, out := utils.RunCmd(fmt.Sprintf("git push origin %s", version.String())); exitcode != 0 {
-		fmt.Printf("ERROR: git push tag exited with %d: %s\n", exitcode, out)
-		// remove image
-		if exitcode, out := utils.RunCmd(fmt.Sprintf("docker rmi %s", new_image_name)); exitcode != 0 {
-			fmt.Printf("ERROR: docker rmi exited with %d: %s\n", exitcode, out)
-		}
-
-		// remove git tag
-		if exitcode, out := utils.RunCmd(fmt.Sprintf("git tag -d %s", version.String())); exitcode != 0 {
-			fmt.Printf("ERROR: git tag delete exited with %d: %s\n", exitcode, out)
-		}
-
-		return errors.New("Failed to push new git tag to origin")
-	}
-
 	fmt.Printf("Released %s\n", version.String())
 
 	return nil
