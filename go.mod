@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/fsouza/go-dockerclient v1.10.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.1
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -18,7 +18,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/klauspost/compress v1.11.13 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
