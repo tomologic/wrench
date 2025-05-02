@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -160,7 +159,7 @@ func buildTest() {
 		os.Exit(1)
 	}
 
-	tempdir, err := ioutil.TempDir(dir, ".wrench_build_")
+	tempdir, err := os.MkdirTemp(dir, ".wrench_build_")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

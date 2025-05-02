@@ -4,12 +4,11 @@ import (
 	"archive/tar"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"syscall"
 
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 var docker_client *docker.Client
@@ -30,7 +29,7 @@ func GetCommandExitCode(err error) int {
 
 func GetFileContent(path string) string {
 	var content string
-	content_bytes, err := ioutil.ReadFile(path)
+	content_bytes, err := os.ReadFile(path)
 	content = string(content_bytes)
 
 	if err != nil {
@@ -42,7 +41,7 @@ func GetFileContent(path string) string {
 
 func WriteFileContent(filename string, content string) {
 	content_bytes := []byte(content)
-	err := ioutil.WriteFile(filename, content_bytes, 0644)
+	err := os.WriteFile(filename, content_bytes, 0644)
 
 	if err != nil {
 		fmt.Println(err)

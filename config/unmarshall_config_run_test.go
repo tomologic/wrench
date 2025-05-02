@@ -79,7 +79,7 @@ func (suite *UnmarshalConfigRunTestSuite) TestUnmarshallConfigRunUnexpectedStruc
 	name, _, err := unmarshallConfigRun(item)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to unmarshall run item", err.Error())
+		assert.Equal(suite.T(), "unable to unmarshall run item", err.Error())
 	}
 	assert.Equal(suite.T(), "", name)
 }
@@ -101,7 +101,7 @@ func (suite *UnmarshalConfigRunTestSuite) TestUnmarshallConfigRunEnvUnexpectedSt
 	name, _, err := unmarshallConfigRun(item)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to parse Env as list for run item foobar", err.Error())
+		assert.Equal(suite.T(), "unable to parse Env as list for run item foobar", err.Error())
 	}
 	assert.Equal(suite.T(), "foobar", name)
 }
@@ -135,7 +135,7 @@ func (suite *UnmarshalConfigRunTestSuite) TestUnmarshallConfigRunSimpleCmdEmpty(
 	name, _, err := unmarshallConfigRun(item)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Cmd empty for simple", err.Error())
+		assert.Equal(suite.T(), "cmd empty for simple", err.Error())
 	}
 	assert.Equal(suite.T(), "simple", name)
 }
@@ -153,7 +153,7 @@ func (suite *UnmarshalConfigRunTestSuite) TestUnmarshallConfigRunExpandedCmdEmpt
 	name, _, err := unmarshallConfigRun(item)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Cmd empty for expanded", err.Error())
+		assert.Equal(suite.T(), "cmd empty for expanded", err.Error())
 	}
 	assert.Equal(suite.T(), "expanded", name)
 }
@@ -169,7 +169,7 @@ func (suite *UnmarshalConfigRunTestSuite) TestUnmarshallConfigRunExpandedUnexpec
 	name, _, err := unmarshallConfigRun(item)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to parse run item as map for expanded", err.Error())
+		assert.Equal(suite.T(), "unable to parse run item as map for expanded", err.Error())
 	}
 	assert.Equal(suite.T(), "expanded", name)
 }
@@ -190,7 +190,7 @@ func (suite *UnmarshalConfigRunTestSuite) TestUnmarshallConfigRunCmdValueNotStri
 	name, _, err := unmarshallConfigRun(item)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to parse Cmd item as string for run item expanded", err.Error())
+		assert.Equal(suite.T(), "unable to parse Cmd item as string for run item expanded", err.Error())
 	}
 	assert.Equal(suite.T(), "expanded", name)
 }
@@ -216,7 +216,7 @@ func (suite *UnmarshalConfigRunTestSuite) TestUnmarshallConfigRunEnvValueNotStri
 	name, _, err := unmarshallConfigRun(item)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to parse Env item as string for run item expanded", err.Error())
+		assert.Equal(suite.T(), "unable to parse Env item as string for run item expanded", err.Error())
 	}
 	assert.Equal(suite.T(), "expanded", name)
 }

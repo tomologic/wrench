@@ -20,5 +20,5 @@ teardown () {
     [ "$ret" -eq 1 ]
 
     echo "out=$out"
-    echo $out | grep "Not a git repository"
+    echo $out | grep "not a git repository"
 }
