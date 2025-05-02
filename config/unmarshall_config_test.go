@@ -77,7 +77,7 @@ func (suite *UnmarshalConfigTestSuite) TestUnmarshallConfigUnexpectedStructure()
 	config, err := unmarshallConfig(content)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to unmarshall Run as map", err.Error())
+		assert.Equal(suite.T(), "unable to unmarshall Run as map", err.Error())
 	}
 	assert.Equal(suite.T(), "", config.Project.Name)
 }
@@ -96,7 +96,7 @@ func (suite *UnmarshalConfigTestSuite) TestUnmarshallConfigUnexpectedStructureRu
 	config, err := unmarshallConfig(content)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to unmarshall run item", err.Error())
+		assert.Equal(suite.T(), "unable to unmarshall run item", err.Error())
 	}
 	assert.Equal(suite.T(), "foobar", config.Project.Name)
 }
@@ -114,7 +114,7 @@ func (suite *UnmarshalConfigTestSuite) TestUnmarshallConfigEnvUnexpectedStructur
 	config, err := unmarshallConfig(content)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to unmarshall run item", err.Error())
+		assert.Equal(suite.T(), "unable to unmarshall run item", err.Error())
 	}
 	assert.Equal(suite.T(), "foobar", config.Project.Name)
 }
@@ -151,7 +151,7 @@ func (suite *UnmarshalConfigTestSuite) TestUnmarshallConfigSimpleCmdEmpty() {
 	config, err := unmarshallConfig(content)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Cmd empty for simple", err.Error())
+		assert.Equal(suite.T(), "cmd empty for simple", err.Error())
 	}
 	assert.Equal(suite.T(), "foobar", config.Project.Name)
 }
@@ -170,7 +170,7 @@ func (suite *UnmarshalConfigTestSuite) TestUnmarshallConfigExpandedCmdEmpty() {
 	config, err := unmarshallConfig(content)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Cmd empty for expanded", err.Error())
+		assert.Equal(suite.T(), "cmd empty for expanded", err.Error())
 	}
 	assert.Equal(suite.T(), "foobar", config.Project.Name)
 }
@@ -187,7 +187,7 @@ func (suite *UnmarshalConfigTestSuite) TestUnmarshallConfigExpandedUnexpectedStr
 	config, err := unmarshallConfig(content)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to parse run item as map for expanded", err.Error())
+		assert.Equal(suite.T(), "unable to parse run item as map for expanded", err.Error())
 	}
 	assert.Equal(suite.T(), "expanded", config.Project.Name)
 }
@@ -204,7 +204,7 @@ func (suite *UnmarshalConfigTestSuite) TestUnmarshallConfigCmdValueNotString() {
 	config, err := unmarshallConfig(content)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to parse Cmd item as string for run item expanded", err.Error())
+		assert.Equal(suite.T(), "unable to parse Cmd item as string for run item expanded", err.Error())
 	}
 	assert.Equal(suite.T(), "expanded", config.Project.Name)
 }
@@ -223,7 +223,7 @@ func (suite *UnmarshalConfigTestSuite) TestUnmarshallConfigEnvValueNotString() {
 	config, err := unmarshallConfig(content)
 
 	if assert.NotNil(suite.T(), err) {
-		assert.Equal(suite.T(), "Unable to parse Env item as string for run item expanded", err.Error())
+		assert.Equal(suite.T(), "unable to parse Env item as string for run item expanded", err.Error())
 	}
 	assert.Equal(suite.T(), "expanded", config.Project.Name)
 }

@@ -1,7 +1,6 @@
 package push
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -89,10 +88,7 @@ func tag_image(image_name string, new_image_name string) error {
 	if exitcode != 0 {
 		fmt.Fprintln(os.Stderr, out)
 
-		return errors.New(fmt.Sprintf(
-			"Could not retag %s to %s",
-			image_name,
-			new_image_name))
+		return fmt.Errorf("could not retag %s to %s", image_name, new_image_name)
 	}
 
 	return nil
@@ -106,7 +102,7 @@ func push_image(image string) error {
 	if exitcode != 0 {
 		fmt.Fprintln(os.Stderr, out)
 
-		return errors.New(fmt.Sprintf("Could not push %s", image))
+		return fmt.Errorf("could not push %s", image)
 	}
 
 	return nil
@@ -120,8 +116,7 @@ func remove_image(image string) error {
 	if exitcode != 0 {
 		fmt.Fprintln(os.Stderr, out)
 
-		return errors.New(fmt.Sprintf(
-			"Could not remove %s", image))
+		return fmt.Errorf("could not remove %s", image)
 	}
 
 	return nil

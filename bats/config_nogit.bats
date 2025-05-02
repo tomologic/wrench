@@ -23,5 +23,5 @@ teardown () {
     [ "$ret" -eq 1 ]
 
     echo "out=$out"
-    echo $out | grep "No git executable found"
+    echo $out | grep "no git executable found"
 }

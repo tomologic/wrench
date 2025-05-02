@@ -66,7 +66,7 @@ func bump(level string) error {
 
 	// create git tag
 	if exitcode, out := utils.RunCmd(fmt.Sprintf("git tag -a %s -m 'Release %s'", version.String(), version.String())); exitcode != 0 {
-		return errors.New(fmt.Sprintf("git tag exited with %d: %s\n", exitcode, out))
+		return fmt.Errorf("git tag exited with %d: %s", exitcode, out)
 	}
 
 	// create image
@@ -74,7 +74,7 @@ func bump(level string) error {
 	exitcode, out := utils.RunCmd(fmt.Sprintf("docker tag %s %s", image_name, new_image_name))
 
 	if exitcode != 0 {
-		return errors.New(fmt.Sprintf("docker tag exited with %d: %s\n", exitcode, out))
+		return fmt.Errorf("docker tag exited with %d: %s", exitcode, out)
 	}
 
 	ver := strings.TrimLeft(version.String(), "v")
@@ -82,7 +82,7 @@ func bump(level string) error {
 		// remove image which is unfinished
 		utils.DockerRemoveImage(new_image_name)
 
-		return errors.New("Failed updating VERSION env")
+		return errors.New("failed updating VERSION env")
 	}
 
 	fmt.Printf("Released %s\n", version.String())
@@ -171,13 +171,13 @@ func getImageName() (string, error) {
 	}
 
 	// return error incase image was not found for current revision
-	return "", errors.New(fmt.Sprintf("Docker image for revision %s could not be found", git_short))
+	return "", fmt.Errorf("docker image for revision %s could not be found", git_short)
 }
 
 func getGitSemverTags() ([]string, error) {
 	exitcode, out := utils.RunCmd("git tag -l 'v[0-9]*\\.[0-9]*\\.[0-9]*'")
 	if exitcode != 0 {
-		return nil, errors.New(fmt.Sprintf("%d: %s", exitcode, out))
+		return nil, fmt.Errorf("%d: %s", exitcode, out)
 	}
 
 	// Split lines into slice
@@ -192,7 +192,7 @@ func getGitSemverTags() ([]string, error) {
 func getRootCommits() ([]string, error) {
 	exitcode, out := utils.RunCmd("git rev-list --max-parents=0 HEAD")
 	if exitcode != 0 {
-		return nil, errors.New(fmt.Sprintf("%d: %s", exitcode, out))
+		return nil, fmt.Errorf("%d: %s", exitcode, out)
 	}
 
 	// Split lines into slice
@@ -221,11 +221,11 @@ func getGitCommitCountSince(sha string) (int, error) {
 func getGitShortSha() (string, error) {
 	exitcode, out := utils.RunCmd("git rev-parse --short HEAD")
 	if exitcode == 128 {
-		return "", errors.New("No semver formatted git tag found")
+		return "", errors.New("no semver formatted git tag found")
 	} else if exitcode != 0 {
 		return "", errors.New(out)
 	} else if out == "" {
-		return "", errors.New("Empty output from git rev-parse")
+		return "", errors.New("empty output from git rev-parse")
 	}
 	return strings.TrimSpace(string(out)), nil
 }

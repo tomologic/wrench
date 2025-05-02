@@ -2,9 +2,7 @@ package config
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -53,7 +51,7 @@ func AddToWrench(cmdRoot *cobra.Command) {
 	cmdRoot.AddCommand(cmdConfig)
 	c, err := loadConfigFile()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		os.Exit(1)
 	}
 	config = &c
@@ -75,13 +73,13 @@ func commandConfig(format string) string {
 	} else {
 		tmpl, err := template.New("format").Parse(format)
 		if err != nil {
-			fmt.Printf("ERROR: %s\n", err)
+			fmt.Print(err)
 			os.Exit(1)
 		}
 		var out bytes.Buffer
 		err = tmpl.Execute(&out, &config)
 		if err != nil {
-			fmt.Printf("ERROR: %s\n", err)
+			fmt.Print(err)
 			os.Exit(1)
 		}
 		return out.String()
@@ -109,7 +107,7 @@ var getConfigContent = func() (string, error) {
 		return "", nil
 	}
 
-	content, err := ioutil.ReadFile("./wrench.yml")
+	content, err := os.ReadFile("./wrench.yml")
 	if err != nil {
 		return "", err
 	}
@@ -143,8 +141,8 @@ var unmarshallConfigRun = func(item yaml.MapItem) (string, Run, error) {
 	run := Run{}
 
 	name, ok := item.Key.(string)
-	if ok != true {
-		return name, run, errors.New("Unable to unmarshall run item")
+	if !ok {
+		return name, run, fmt.Errorf("unable to unmarshall run item")
 	}
 
 	// No more values provided if value is a string
@@ -160,27 +158,27 @@ var unmarshallConfigRun = func(item yaml.MapItem) (string, Run, error) {
 		//   Env: ...
 		run_expanded, ok := item.Value.(yaml.MapSlice)
 		if !ok {
-			return name, run, errors.New(fmt.Sprintf("Unable to parse run item as map for %s", name))
+			return name, run, fmt.Errorf("unable to parse run item as map for %s", name)
 		}
 
 		for k := range run_expanded {
 			if run_expanded[k].Key.(string) == "Cmd" {
 				cmd_string, ok = run_expanded[k].Value.(string)
 				if !ok {
-					return name, run, errors.New(fmt.Sprintf("Unable to parse Cmd item as string for run item %s", name))
+					return name, run, fmt.Errorf("unable to parse Cmd item as string for run item %s", name)
 				}
 				run.Cmd = strings.TrimSpace(cmd_string)
 			} else if run_expanded[k].Key.(string) == "Env" {
 				env_list, ok := run_expanded[k].Value.([]interface{})
 				if !ok {
-					return name, run, errors.New(fmt.Sprintf("Unable to parse Env as list for run item %s", name))
+					return name, run, fmt.Errorf("unable to parse Env as list for run item %s", name)
 				}
 				for _, s := range env_list {
 					t, ok := s.(string)
 					if ok {
 						run.Env = append(run.Env, t)
 					} else {
-						return name, run, errors.New(fmt.Sprintf("Unable to parse Env item as string for run item %s", name))
+						return name, run, fmt.Errorf("unable to parse Env item as string for run item %s", name)
 					}
 				}
 			}
@@ -188,7 +186,7 @@ var unmarshallConfigRun = func(item yaml.MapItem) (string, Run, error) {
 	}
 
 	if run.Cmd == "" {
-		return name, run, errors.New(fmt.Sprintf("Cmd empty for %s", name))
+		return name, run, fmt.Errorf("cmd empty for %s", name)
 	}
 
 	return name, run, nil
@@ -206,7 +204,7 @@ var unmarshallConfig = func(content string) (Config, error) {
 	// Load the expected yaml file structure
 	err := yaml.Unmarshal([]byte(content), &uconfig)
 	if err != nil {
-		return config, errors.New("Unable to unmarshall Run as map")
+		return config, fmt.Errorf("unable to unmarshall Run as map")
 	}
 
 	// Get Project from unmarshalled config
@@ -297,7 +295,7 @@ func GetRun(name string) (Run, bool) {
 var getHostname = func() (string, error) {
 	exitcode, out := runCmd("hostname -f")
 	if exitcode != 0 {
-		return "", errors.New(fmt.Sprintf("hostname exited with %d", exitcode))
+		return "", fmt.Errorf("hostname exited with %d", exitcode)
 	}
 	return out, nil
 }
@@ -305,7 +303,7 @@ var getHostname = func() (string, error) {
 func detectProjectOrganization() string {
 	hostname, err := getHostname()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		os.Exit(1)
 	}
 
@@ -347,11 +345,11 @@ var runCmd = func(command string) (int, string) {
 var getGitRepoPresent = func() (bool, error) {
 	exitcode, out := runCmd("git rev-parse --short HEAD")
 	if exitcode == 127 {
-		return false, errors.New("No git executable found")
+		return false, fmt.Errorf("no git executable found")
 	} else if exitcode == 128 {
-		return false, errors.New("Not a git repository")
+		return false, fmt.Errorf("not a git repository")
 	} else if exitcode != 0 {
-		return false, errors.New(out)
+		return false, fmt.Errorf("%s", out)
 	}
 	return true, nil
 }
@@ -361,11 +359,11 @@ var getGitSemverTag = func() (string, error) {
 	exitcode, out := runCmd("git describe --tags --match v*.*.*")
 	if exitcode == 128 {
 		// No version tag found, generate initial version
-		return "", errors.New("No semver formatted git tag found")
+		return "", fmt.Errorf("no semver formatted git tag found")
 	} else if exitcode != 0 {
-		return "", errors.New(out)
+		return "", fmt.Errorf("%s", out)
 	} else if out == "" {
-		return "", errors.New("Empty output from git describe")
+		return "", fmt.Errorf("empty output from git describe")
 	}
 
 	version := strings.TrimSpace(string(out))
@@ -375,7 +373,7 @@ var getGitSemverTag = func() (string, error) {
 func detectProjectVersion() string {
 	// make sure git is installed and we are inside a git repo
 	if present, err := getGitRepoPresent(); !present {
-		fmt.Println(err)
+		fmt.Print(err)
 		os.Exit(1)
 	}
 
@@ -390,7 +388,7 @@ func detectProjectVersion() string {
 var getGitCommitCount = func() (int, error) {
 	exitcode, out := runCmd("git rev-list HEAD --count")
 	if exitcode != 0 {
-		return 0, errors.New(out)
+		return 0, fmt.Errorf("%s", out)
 	}
 
 	num, err := strconv.Atoi(strings.TrimSpace(out))
@@ -407,11 +405,11 @@ var getGitCommitCount = func() (int, error) {
 var getGitShortSha = func() (string, error) {
 	exitcode, out := runCmd("git rev-parse --short HEAD")
 	if exitcode == 128 {
-		return "", errors.New("No semver formatted git tag found")
+		return "", fmt.Errorf("no semver formatted git tag found")
 	} else if exitcode != 0 {
-		return "", errors.New(out)
+		return "", fmt.Errorf("%s", out)
 	} else if out == "" {
-		return "", errors.New("Empty output from git rev-parse")
+		return "", fmt.Errorf("empty output from git rev-parse")
 	}
 	return strings.TrimSpace(string(out)), nil
 }
@@ -421,14 +419,14 @@ var generateInitialVersion = func() string {
 	num_commits, err := getGitCommitCount()
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		os.Exit(1)
 	}
 
 	// Get short git sha
 	git_short, err := getGitShortSha()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Print(err)
 		os.Exit(1)
 	}
 

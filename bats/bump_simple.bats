@@ -52,7 +52,7 @@ teardown () {
     echo "output=$output"
     echo "status=$status"
     [ "$status" -eq 1 ]
-    [[ "$output" =~ Docker\ image\ for\ revision\ [^\ ]*\ could\ not\ be\ found ]]
+    [[ "$output" =~ docker\ image\ for\ revision\ [^\ ]*\ could\ not\ be\ found ]]
 }
 
 @test "BUMP: current revision already released" {

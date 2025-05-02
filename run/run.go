@@ -2,7 +2,6 @@ package run
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,8 +11,6 @@ import (
 	"github.com/tomologic/wrench/config"
 	"github.com/tomologic/wrench/utils"
 )
-
-var run_list *map[string]interface{}
 
 func AddToWrench(cmdRoot *cobra.Command) {
 	var cmdRun = &cobra.Command{
@@ -37,7 +34,7 @@ func run(name string) {
 	image_name := config.GetProjectImage()
 
 	run, ok := config.GetRun(name)
-	if ok == false {
+	if !ok {
 		fmt.Printf("ERROR: %s not found in wrench.yml\n", name)
 		os.Exit(1)
 	}
@@ -61,7 +58,7 @@ func run(name string) {
 		os.Exit(1)
 	}
 
-	tempdir, err := ioutil.TempDir(dir, ".wrench_run_")
+	tempdir, err := os.MkdirTemp(dir, ".wrench_run_")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
